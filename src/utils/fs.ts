@@ -20,6 +20,14 @@ export const temporaryDirectoryPath = Dirs.CacheDir
 export const externalStorageDirectoryPath = Dirs.SDCardDir
 export const privateStorageDirectoryPath = Dirs.DocumentDir
 
+export const getWebDAVPrivateDirectory = () => {
+  const docDir = privateStorageDirectoryPath
+  if (!docDir || typeof docDir !== 'string') {
+    return '/storage/emulated/0/Music/LX-N Music/WebDAV'
+  }
+  return `${docDir}/WebDAV`
+}
+
 export const getExternalStoragePaths = async (is_removable?: boolean) =>
   _getExternalStoragePaths(is_removable)
 

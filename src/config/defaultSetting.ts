@@ -131,6 +131,7 @@ const defaultSetting: LX.AppSetting = {
   'sync.webdav.url': '',
   'sync.webdav.username': '',
   'sync.webdav.password': '',
+  'webdav.downloadPath': '',
   'sync.webdav.path': '/LX_Music/',
   'sync.webdav.lastSyncTimeLists': 0,
 

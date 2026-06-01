@@ -30,9 +30,10 @@ import {
   scanWebDAVSongs,
   updateWebDAVMusicMeta,
 } from '@/core/webdavMusic/drive'
-import { getPicUrl } from '@/core/music'
+import { getPicPath } from '@/core/music'
 import settingState from '@/store/setting/state'
 import WebDAVListMenu, { type WebDAVListMenuType, type SelectInfo as WebDAVSelectInfo } from './WebDAVListMenu'
+import WebDAVDownloadPath from './components/WebDAVDownloadPath'
 import MetadataEditModal from '@/components/MetadataEditModal'
 import {
   handleWebDAVDownload,
@@ -195,10 +196,9 @@ export default memo(() => {
     const updatedSongs = await Promise.all(
       songList.map(async (song) => {
         try {
-          const picUrl = await getPicUrl({
+          const picUrl = await getPicPath({
             musicInfo: song,
             isRefresh: false,
-            skipFilePic: false,
           })
           if (picUrl && picUrl !== song.meta.picUrl) {
             return {
@@ -303,15 +303,7 @@ export default memo(() => {
   const handlePlayLater = useCallback((info: WebDAVSelectInfo) => {
     const musicInfo = info.musicInfo
     addTempPlayList([{
-      id: musicInfo.id,
-      name: musicInfo.name,
-      singer: musicInfo.singer,
-      albumName: musicInfo.meta.albumName,
-      source: musicInfo.source,
-      interval: musicInfo.interval,
-      url: '',
-      pic: musicInfo.meta.picUrl,
-      lyric: '',
+      listId: null,
       musicInfo,
     }])
     toast('已添加到稍后播放')
@@ -327,6 +319,11 @@ export default memo(() => {
       toast('正在读取标签...')
       const fileMetadata = await readMetadata(musicInfo.meta.filePath)
       const picPath = await readPic(musicInfo.meta.filePath).catch(() => null)
+      
+      if (!fileMetadata) {
+        toast('没有找到标签信息')
+        return
+      }
       
       const updates: Record<string, any> = {}
       if (fileMetadata.albumName) updates.albumName = fileMetadata.albumName
@@ -607,6 +604,8 @@ export default memo(() => {
           {hasConfig ? '已配置' : '未配置，请在设置中配置 WebDAV'}
         </Text>
       </View>
+
+      <WebDAVDownloadPath />
 
       <View style={{ ...styles.panel, borderColor: theme['c-border-background'] }}>
         <Text style={styles.label}>目录</Text>

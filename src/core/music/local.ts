@@ -134,7 +134,20 @@ const downloadWebDAVMusic = async (musicInfo: LX.WebDAV.MusicInfo): Promise<stri
   }
   
   const downloadUrl = getWebDAVDownloadUrl(musicInfo)
-  const downloadDir = settingState.setting['download.path'] || '/storage/emulated/0/Music/LX-N Music'
+  
+  // 优先使用 WebDAV 专用路径配置，默认使用私有目录
+  const webdavPath = settingState.setting['webdav.downloadPath']
+  let downloadDir = ''
+  if (webdavPath && typeof webdavPath === 'string' && webdavPath.trim()) {
+    downloadDir = webdavPath.trim()
+  } else {
+    // 使用私有目录作为默认路径
+    const { getWebDAVPrivateDirectory } = await import('@/utils/fs')
+    downloadDir = getWebDAVPrivateDirectory()
+  }
+  
+  webDAVLog?.info('downloadWebDAVMusic: using download directory', { downloadDir, webdavPath })
+  
   const fileName = musicInfo.meta.fileName
   
   let filePath = `${downloadDir}/${fileName}`
@@ -353,8 +366,15 @@ export const getPicUrl = async ({
         return foundPicUrl
       }
       
-      // 第2步：如果没有找到，检查默认下载路径下是否有 MP3 文件
-      const downloadDir = settingState.setting['download.path'] || '/storage/emulated/0/Music/LX-N Music'
+      // 第2步：如果没有找到，检查 WebDAV 下载路径下是否有 MP3 文件
+      const webdavPath = settingState.setting['webdav.downloadPath']
+      let downloadDir = ''
+      if (webdavPath && typeof webdavPath === 'string' && webdavPath.trim()) {
+        downloadDir = webdavPath.trim()
+      } else {
+        const { getWebDAVPrivateDirectory } = await import('@/utils/fs')
+        downloadDir = getWebDAVPrivateDirectory()
+      }
       const audioFilePath = musicInfo.meta.filePath
       let targetFilePath = audioFilePath
       
@@ -481,7 +501,14 @@ export const getLyricInfo = async ({
       }
 
       // 第2步：检查本地下载的文件是否有内嵌歌词
-      const downloadDir = settingState.setting['download.path'] || '/storage/emulated/0/Music/LX-N Music'
+      const webdavPath = settingState.setting['webdav.downloadPath']
+      let downloadDir = ''
+      if (webdavPath && typeof webdavPath === 'string' && webdavPath.trim()) {
+        downloadDir = webdavPath.trim()
+      } else {
+        const { getWebDAVPrivateDirectory } = await import('@/utils/fs')
+        downloadDir = getWebDAVPrivateDirectory()
+      }
       const audioFilePath = musicInfo.meta.filePath
       let targetFilePath = audioFilePath
 

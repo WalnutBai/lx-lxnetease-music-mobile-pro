@@ -580,6 +580,12 @@
   "setting_download_path_default": "預設路徑",
   "setting_download_path_set_success": "下載路徑設定成功",
   "setting_download_path_reset_success": "已恢復預設路徑",
+  "webdav_download_path": "WebDAV 下載路徑",
+  "webdav_download_path_label": "目前路徑：{path}",
+  "webdav_download_path_select": "選擇路徑",
+  "webdav_download_path_default": "預設路徑",
+  "webdav_download_path_set_success": "路徑設定成功",
+  "webdav_download_path_reset_success": "已重設為預設路徑",
   "exit_app_tip_double_press": "再按一次離開應用",
   "setting_basic_nav_menu": "側邊欄 [菜單 & 橫向滾動] 排序設定"
 }

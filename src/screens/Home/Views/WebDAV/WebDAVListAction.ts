@@ -1,6 +1,6 @@
 import { findMusic } from '@/utils/musicSdk'
 import { getWebDAVConfig, updateWebDAVMusicMeta, getWebDAVDownloadUrl, saveWebDAVConfig } from '@/core/webdavMusic/drive'
-import { downloadFile, existsFile, mkdir } from '@/utils/fs'
+import { downloadFile, existsFile, mkdir, getWebDAVPrivateDirectory } from '@/utils/fs'
 import { toast, clipboardWriteText, requestStoragePermission } from '@/utils/tools'
 import settingState from '@/store/setting/state'
 import { btoa } from 'react-native-quick-base64'
@@ -8,20 +8,36 @@ import { updateListMusics } from '@/core/list'
 import { webDAVLog } from '@/core/webdavMusic/logger'
 import { readPic, readMetadata } from '@/utils/localMediaMetadata'
 
-const getDefaultDownloadDir = () => {
-  const userPath = settingState.setting['download.path']
-  const defaultPath = '/storage/emulated/0/Music/LX-N Music'
+export const getDefaultDownloadDir = () => {
+  // 优先使用 WebDAV 专用路径配置
+  const webdavPath = settingState.setting['webdav.downloadPath']
+  const globalDownloadPath = settingState.setting['download.path']
   
-  // 如果用户设置了路径且不为空，使用用户路径
-  if (userPath && typeof userPath === 'string' && userPath.trim()) {
-    const resolvedPath = userPath.trim()
-    webDAVLog.info('getDefaultDownloadDir: using user configured path', { path: resolvedPath })
+  webDAVLog.info('getDefaultDownloadDir: checking settings', { 
+    webdavPath, 
+    webdavPathType: typeof webdavPath,
+    globalDownloadPath,
+    privateDir: getWebDAVPrivateDirectory()
+  })
+  
+  if (webdavPath && typeof webdavPath === 'string' && webdavPath.trim()) {
+    const resolvedPath = webdavPath.trim()
+    webDAVLog.info('getDefaultDownloadDir: using webdav configured path', { path: resolvedPath })
     return resolvedPath
   }
   
-  // 否则使用默认路径
-  webDAVLog.info('getDefaultDownloadDir: using default path', { path: defaultPath })
+  // 默认使用私有目录
+  const defaultPath = getWebDAVPrivateDirectory()
+  webDAVLog.info('getDefaultDownloadDir: using private directory', { path: defaultPath })
   return defaultPath
+}
+
+export const getWebDAVDownloadPath = () => {
+  const webdavPath = settingState.setting['webdav.downloadPath']
+  if (webdavPath && typeof webdavPath === 'string' && webdavPath.trim()) {
+    return webdavPath.trim()
+  }
+  return getWebDAVPrivateDirectory()
 }
 
 export const handleWebDAVDownload = async (musicInfo: LX.WebDAV.MusicInfo): Promise<string | null> => {
@@ -205,7 +221,7 @@ export const handleFetchWebDAVPicFromOnline = async (
     toast('封面获取成功！')
     return newPicUrl
   } catch (error: any) {
-    webDAVLog.error('handleFetchWebDAVPicFromOnline: failed', { error: error.message, error })
+    webDAVLog.error('handleFetchWebDAVPicFromOnline: failed', { error: error.message, stack: error.stack })
     const errorMessage = error.message || String(error)
     if (errorMessage.includes('timeout')) {
       toast('搜索超时，请重试', 'long')

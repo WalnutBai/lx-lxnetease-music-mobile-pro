@@ -418,6 +418,7 @@ declare global {
       'sync.webdav.url': string;
       'sync.webdav.username': string;
       'sync.webdav.password': string;
+      'webdav.downloadPath': string;
       'sync.webdav.path': string;
       'sync.webdav.lastSyncTimeLists': number;
     }

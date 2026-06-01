@@ -224,7 +224,7 @@ export const getWebDAVDownloadUrl = (musicInfo: LX.WebDAV.MusicInfo) => {
   const url = settings['sync.webdav.url']
   
   // 优先使用 remotePath，其次是 songId，最后是 filePath
-  let remoteFilePath = musicInfo.meta.remotePath || musicInfo.meta.songId || musicInfo.meta.filePath
+  let remoteFilePath = String(musicInfo.meta.remotePath || musicInfo.meta.songId || musicInfo.meta.filePath)
   
   if (!remoteFilePath.startsWith('/')) {
     remoteFilePath = '/' + remoteFilePath
@@ -234,7 +234,7 @@ export const getWebDAVDownloadUrl = (musicInfo: LX.WebDAV.MusicInfo) => {
   // 检查路径是否是本地路径（包含 /storage/emulated/ 或 /sdcard/）
   if (remoteFilePath.includes('/storage/emulated/') || remoteFilePath.includes('/sdcard/') || remoteFilePath.includes('/storage/self/')) {
     webDAVLog.warn('getWebDAVDownloadUrl: detected local path in remoteFilePath, using songId instead', { remoteFilePath, songId: musicInfo.meta.songId })
-    remoteFilePath = musicInfo.meta.songId || musicInfo.meta.filePath
+    remoteFilePath = String(musicInfo.meta.songId || musicInfo.meta.filePath)
     if (!remoteFilePath.startsWith('/')) {
       remoteFilePath = '/' + remoteFilePath
     }

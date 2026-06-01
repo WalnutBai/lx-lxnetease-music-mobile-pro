@@ -245,6 +245,16 @@ declare global {
       'playDetail.isShowLyricProgressSetting': boolean
 
       /**
+       * 播放详情页-横屏沉浸模式-歌词字体大小
+       */
+      'playDetail.landscapeImmersion.style.lrcFontSize': number
+
+      /**
+       * 播放详情页-横屏沉浸模式-是否显示控制栏
+       */
+      'playDetail.landscapeImmersion.showControl': boolean
+
+      /**
        * 是否启用桌面歌词
        */
       'desktopLyric.enable': boolean

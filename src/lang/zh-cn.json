@@ -198,6 +198,8 @@
   "play": "播放",
   "play_all": "播放全部",
   "play_detail_setting_lrc_align": "歌词对齐方式",
+  "landscape_immersion_setting_title": "横屏沉浸设置",
+  "landscape_immersion_setting_show_control": "是否显示进度栏（含控制功能）",
   "play_detail_setting_cover_spin": "封面旋转效果",
   "play_detail_setting_lrc_align_center": "居中",
   "play_detail_setting_lrc_align_left": "居左",

@@ -198,6 +198,8 @@
   "play": "Play",
   "play_all": "Play all",
   "play_detail_setting_lrc_align": "Lyric Alignment",
+  "landscape_immersion_setting_title": "Landscape Immersion Setting",
+  "landscape_immersion_setting_show_control": "Show progress bar and controls",
   "play_detail_setting_cover_spin": "Cover Spin Effect",
   "play_detail_setting_lrc_align_center": "Center",
   "play_detail_setting_lrc_align_left": "Left",

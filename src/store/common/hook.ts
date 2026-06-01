@@ -108,6 +108,19 @@ export const useBgPic = () => {
   return value
 }
 
+export const useIsLandscapeImmersion = () => {
+  const [value, update] = useState(state.isLandscapeImmersion)
+
+  useEffect(() => {
+    global.state_event.on('isLandscapeImmersionUpdated', update)
+    return () => {
+      global.state_event.off('isLandscapeImmersionUpdated', update)
+    }
+  }, [])
+
+  return value
+}
+
 export const useSourceNames = () => {
   const [value, update] = useState(state.sourceNames)
 

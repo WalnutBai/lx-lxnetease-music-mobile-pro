@@ -38,4 +38,8 @@ export default {
     state.sourceNames = names
     global.state_event.sourceNamesUpdated(names)
   },
+  setIsLandscapeImmersion(isLandscapeImmersion: boolean) {
+    state.isLandscapeImmersion = isLandscapeImmersion
+    global.state_event.isLandscapeImmersionUpdated(isLandscapeImmersion)
+  },
 }

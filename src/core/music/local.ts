@@ -125,6 +125,7 @@ const downloadWebDAVMusic = async (musicInfo: LX.WebDAV.MusicInfo): Promise<stri
   const module = await loadWebDAVModule()
   const { getWebDAVDownloadUrl, updateWebDAVMusicMeta } = module
   const { downloadFile } = await import('@/utils/fs')
+  const { readMetadata } = await import('@/utils/localMediaMetadata')
   
   // 请求存储权限
   const hasPermission = await requestStoragePermission()
@@ -168,6 +169,33 @@ const downloadWebDAVMusic = async (musicInfo: LX.WebDAV.MusicInfo): Promise<stri
       await downloadFile(downloadUrl, filePath, { headers }).promise
 
       webDAVLog?.info('downloadWebDAVMusic: download completed successfully', { filePath })
+
+      // 读取文件元数据（包括专辑名称等信息）
+      const fileMetadata = await readMetadata(filePath).catch(() => null)
+      webDAVLog?.info('downloadWebDAVMusic: read file metadata', { metadata: fileMetadata })
+      
+      const updates: Record<string, any> = { filePath }
+      
+      // 如果文件中有专辑信息，更新到配置
+      if (fileMetadata) {
+        if (fileMetadata.albumName) {
+          updates.albumName = fileMetadata.albumName
+          webDAVLog?.info('downloadWebDAVMusic: found album name in file', { albumName: fileMetadata.albumName })
+        }
+        if (fileMetadata.name && !musicInfo.name) {
+          updates.name = fileMetadata.name
+          webDAVLog?.info('downloadWebDAVMusic: found song name in file', { name: fileMetadata.name })
+        }
+        if (fileMetadata.singer && !musicInfo.singer) {
+          updates.singer = fileMetadata.singer
+          webDAVLog?.info('downloadWebDAVMusic: found singer in file', { singer: fileMetadata.singer })
+        }
+      }
+      
+      // 更新配置中的文件路径和元数据
+      await updateWebDAVMusicMeta(musicInfo.id, updates)
+
+      // 提取并保存内嵌封面
       await readEmbeddedCoverAndSave(musicInfo, filePath, updateWebDAVMusicMeta)
 
       return filePath
@@ -428,14 +456,72 @@ export const getLyricInfo = async ({
   isRefresh: boolean
   onToggleSource?: (musicInfo?: LX.Music.MusicInfoOnline) => void
 }): Promise<LX.Player.LyricInfo> => {
-  if (!isRefresh && !skipFileLyric) {
-    // const lyricInfo = await getCachedLyricInfo(musicInfo)
-    // if (lyricInfo?.rawlrcInfo.lyric && lyricInfo.lyric != lyricInfo.rawlrcInfo.lyric) {
-    //   // 存在已编辑歌词
-    //   return buildLyricInfo(lyricInfo)
-    // }
+  const isWebDAVMusic = 'webdav' in musicInfo.meta && (musicInfo.meta as any).webdav === true
 
-    // 尝试读取文件内歌词
+  if (!isRefresh && !skipFileLyric) {
+    // WebDAV 音乐特殊处理
+    if (isWebDAVMusic) {
+      // 第1步：检查缓存歌词
+      const lyricInfo = await getCachedLyricInfo(musicInfo)
+      if (lyricInfo?.lyric) {
+        webDAVLog?.info('getLyricInfo: WebDAV music using cached lyric', { musicId: musicInfo.id })
+        return buildLyricInfo(lyricInfo)
+      }
+
+      // 第2步：检查本地下载的文件是否有内嵌歌词
+      const downloadDir = settingState.setting['download.path'] || '/storage/emulated/0/Music/LX-N Music'
+      const audioFilePath = musicInfo.meta.filePath
+      let targetFilePath = audioFilePath
+
+      if (audioFilePath) {
+        const audioExists = await existsFile(audioFilePath).catch(() => false)
+        if (!audioExists) {
+          targetFilePath = `${downloadDir}/${musicInfo.meta.fileName}`
+        }
+      } else {
+        targetFilePath = `${downloadDir}/${musicInfo.meta.fileName}`
+      }
+
+      const targetExists = await existsFile(targetFilePath).catch(() => false)
+      if (targetExists) {
+        webDAVLog?.info('getLyricInfo: WebDAV music reading lyric from local file', { targetFilePath })
+        const rawlrcInfo = await getMusicFileLyric(targetFilePath)
+        if (rawlrcInfo) {
+          webDAVLog?.info('getLyricInfo: WebDAV music found embedded lyric', { musicId: musicInfo.id })
+          return buildLyricInfo(rawlrcInfo)
+        }
+      }
+
+      // 第3步：尝试在线获取歌词（AI识别）
+      webDAVLog?.info('getLyricInfo: WebDAV music fetching lyric from online source', { musicId: musicInfo.id })
+      try {
+        return await getOnlineOtherSourceLyricByLocal(musicInfo, isRefresh).then(
+          ({ lyricInfo, isFromCache }) => {
+            if (!isFromCache) void saveLyric(musicInfo, lyricInfo)
+            webDAVLog?.info('getLyricInfo: WebDAV music fetched lyric successfully', { musicId: musicInfo.id })
+            return buildLyricInfo(lyricInfo)
+          }
+        )
+      } catch (err) {
+        webDAVLog?.warn('getLyricInfo: WebDAV music online lyric fetch failed', { err })
+      }
+
+      // 第4步：尝试其他来源
+      onToggleSource()
+      return getOtherSourceByLocal(musicInfo, async (otherSource) => {
+        return getOnlineOtherSourceLyricInfo({
+          musicInfos: [...otherSource],
+          onToggleSource,
+          isRefresh,
+        }).then(async ({ lyricInfo, musicInfo: targetMusicInfo, isFromCache }) => {
+          void saveLyric(musicInfo, lyricInfo)
+          if (!isFromCache) void saveLyric(targetMusicInfo, lyricInfo)
+          return buildLyricInfo(lyricInfo)
+        })
+      })
+    }
+
+    // 非 WebDAV 音乐的歌词获取逻辑保持不变
     const rawlrcInfo = await getMusicFileLyric(musicInfo.meta.filePath)
     if (rawlrcInfo) return buildLyricInfo(rawlrcInfo)
 

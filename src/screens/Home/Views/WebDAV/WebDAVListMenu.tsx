@@ -54,8 +54,7 @@ export default forwardRef<WebDAVListMenuType, WebDAVListMenuProps>((props, ref) 
       const menu: Menus[number][] = []
 
       menu.push({ action: 'playLater', label: t('play_later') })
-      menu.push({ action: 'download', label: t('download') })
-      menu.push({ action: 'fetchPicFromOnline', label: '从在线音源获取封面' })
+      menu.push({ action: 'fetchPicFromOnline', label: '在线封面' })
       menu.push({ action: 'editMetadata', label: t('edit_metadata') })
       menu.push({ action: 'copyName', label: t('copy_name') })
       menu.push({ action: 'remove', label: t('delete') })

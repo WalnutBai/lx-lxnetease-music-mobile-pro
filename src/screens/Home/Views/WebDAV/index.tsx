@@ -19,6 +19,7 @@ import { LIST_IDS, LIST_ITEM_HEIGHT } from '@/config/constant'
 import { scaleSizeH } from '@/utils/pixelRatio'
 import { overwriteListMusics } from '@/core/list'
 import { playList } from '@/core/player/player'
+import { addTempPlayList } from '@/core/player/tempPlayList'
 import { usePlayMusicInfo } from '@/store/player/hook'
 import playerState from '@/store/player/state'
 import {
@@ -36,6 +37,7 @@ import {
   handleFetchWebDAVPicFromOnline,
   handleWebDAVRemove,
   handleWebDAVCopyName,
+  handleWebDAVDownloadAndImport,
 } from './WebDAVListAction'
 
 type ActiveTab = 'config' | 'list'
@@ -158,6 +160,7 @@ export default memo(() => {
   const [scanText, setScanText] = useState('')
   const [searchVisible, setSearchVisible] = useState(false)
   const [searchText, setSearchText] = useState('')
+  const [batchLoadingText, setBatchLoadingText] = useState('')
   const listRef = useRef<FlatList<LX.WebDAV.MusicInfo>>(null)
   const searchInputRef = useRef<TextInput>(null)
   const pendingJumpIdRef = useRef<string | null>(null)
@@ -253,10 +256,21 @@ export default memo(() => {
   )
 
   const handlePlayLater = useCallback((info: WebDAVSelectInfo) => {
-    void overwriteListMusics(LIST_IDS.TEMP, songs).then(() => {
-      void playList(LIST_IDS.TEMP, info.index)
-    })
-  }, [songs])
+    const musicInfo = info.musicInfo
+    addTempPlayList([{
+      id: musicInfo.id,
+      name: musicInfo.name,
+      singer: musicInfo.singer,
+      albumName: musicInfo.meta.albumName,
+      source: musicInfo.source,
+      interval: musicInfo.interval,
+      url: '',
+      pic: musicInfo.meta.picUrl,
+      lyric: '',
+      musicInfo,
+    }])
+    toast('已添加到稍后播放')
+  }, [])
 
   const handleDownload = useCallback((info: WebDAVSelectInfo) => {
     void handleWebDAVDownload(info.musicInfo).then((newPicUrl) => {
@@ -299,6 +313,22 @@ export default memo(() => {
   const handleCopyName = useCallback((info: WebDAVSelectInfo) => {
     handleWebDAVCopyName(info.musicInfo)
   }, [])
+
+  const handleBatchDownload = useCallback(() => {
+    if (filteredSongs.length === 0) {
+      toast('没有歌曲可以下载')
+      return
+    }
+    void confirmDialog({
+      title: '批量下载',
+      message: `确定要下载当前列表中的 ${filteredSongs.length} 首歌曲吗？下载后的歌曲将添加到下载列表中，并自动读取音乐标签。`,
+      confirmButtonText: '开始下载',
+    }).then((confirmed) => {
+      if (confirmed) {
+        void handleWebDAVDownloadAndImport(filteredSongs, setBatchLoadingText)
+      }
+    })
+  }, [filteredSongs])
 
   const loadFolders = useCallback((folder: LX.WebDAV.DriveFolder | null) => {
     setFolderLoading(true)
@@ -453,9 +483,10 @@ export default memo(() => {
   )
 
   const headerText = useMemo(() => {
+    if (batchLoadingText) return batchLoadingText
     if (searchText.trim()) return `${filteredSongs.length}/${songs.length} 首`
     return `${songs.length} 首${scannedAt ? ` · ${formatTime(scannedAt)}` : ''}`
-  }, [filteredSongs.length, scannedAt, searchText, songs.length])
+  }, [batchLoadingText, filteredSongs.length, scannedAt, searchText, songs.length])
 
   const handleToggleSearch = useCallback(() => {
     setSearchVisible((visible) => {
@@ -594,10 +625,17 @@ export default memo(() => {
         ) : null}
         <Button
           style={{ ...styles.scanButton, backgroundColor: theme['c-button-background'] }}
-          disabled={!hasConfig || loading}
+          disabled={!hasConfig || loading || !!batchLoadingText}
           onPress={handleScan}
         >
           <Text color={theme['c-button-font']}>扫描</Text>
+        </Button>
+        <Button
+          style={{ ...styles.scanButton, backgroundColor: theme['c-primary-background-hover'], marginLeft: 8 }}
+          disabled={!hasConfig || loading || !!batchLoadingText || filteredSongs.length === 0}
+          onPress={handleBatchDownload}
+        >
+          <Text color={theme['c-primary-font']}>批量下载</Text>
         </Button>
       </View>
       <FlatList

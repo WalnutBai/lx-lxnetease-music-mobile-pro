@@ -15,7 +15,7 @@ import { useUnmounted } from '@/utils/hooks'
 import MetadataForm, { defaultData, type Metadata, type MetadataFormType } from './MetadataForm'
 import { log } from '@/utils/log'
 import { formatPlayTime2 } from '@/utils'
-import { unlink } from '@/utils/fs'
+import { unlink, rename } from '@/utils/fs'
 
 export type { Metadata }
 
@@ -72,7 +72,7 @@ export default forwardRef<MetadataEditType, MetadataEditProps>((props, ref) => {
 
   const handleUpdate = async () => {
     if (!metadataFormRef.current) return
-    let _metadata = metadataFormRef.current.getForm()
+    let _metadata = metadataFormRef.current.getForm() as Metadata & { fileName?: string; originalFileName?: string }
     if (!_metadata.name) {
       toast(global.i18n.t('metadata_edit_modal_tip'), 'long')
       return
@@ -80,6 +80,14 @@ export default forwardRef<MetadataEditType, MetadataEditProps>((props, ref) => {
     setProcessing(true)
     let isUpdated = false
     try {
+      if (_metadata.fileName && _metadata.originalFileName && _metadata.fileName !== _metadata.originalFileName) {
+        const lastSlashIndex = filePath.current.lastIndexOf('/')
+        const newFilePath = filePath.current.substring(0, lastSlashIndex + 1) + _metadata.fileName
+        await rename(filePath.current, newFilePath)
+        filePath.current = newFilePath
+        isUpdated ||= true
+      }
+
       if (
         _metadata.name != metadata.current.name ||
         _metadata.singer != metadata.current.singer ||

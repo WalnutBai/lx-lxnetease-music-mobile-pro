@@ -1,6 +1,6 @@
 <p align="center"><a href="https://github.com/lyswhut/lx-music-mobile"><img width="200" src="https://github.com/lyswhut/lx-music-mobile/blob/master/doc/images/icon.png" alt="lx-music logo"></a></p>
 
-<h1 align="center">LX-N Music 移动版-改</h1>
+<h1 align="center">LX-N Music 移动版</h1>
 
 <p align="center">
   <a href="https://github.com/WalnutBai/lx-n-music-mobile-pro/releases"><img src="https://img.shields.io/github/release/souvenp/lx-netease-music-mobile" alt="Release version"></a>
@@ -10,8 +10,9 @@
 
 <p align="center">一个基于 React Native 开发的音乐软件</p>
 
-注:这是三方修改版 lx-netease-music-mobile 基础上继续改造，仅供个人自用
-官方地址:https://github.com/souvenp/lx-netease-music-mobile
+> **注**: 这是在三方修改版 `lx-netease-music-mobile` 基础上继续改造，仅供个人自用
+> 
+> 官方地址: [lx-netease-music-mobile](https://github.com/souvenp/lx-netease-music-mobile)
 
 > **注意**: 涉及同步、备份未充分测试，请自行备份重要文件
 

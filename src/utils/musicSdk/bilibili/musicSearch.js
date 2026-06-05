@@ -138,12 +138,10 @@ const musicSearchModule = {
     this.allPage = numPages || Math.ceil(this.total / limit)
     this.page = page
 
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const pageResults = sortedResults.slice(startIndex, endIndex)
-    log.info('[Bilibili Search] handleResult - 分页结果数量: ' + pageResults.length + ', allPage: ' + this.allPage)
+    // API已经返回了分页后的结果，不需要再做本地分页
+    log.info('[Bilibili Search] handleResult - 直接使用API分页结果，数量: ' + sortedResults.length + ', allPage: ' + this.allPage)
 
-    const list = pageResults.map((item, index) => {
+    const list = sortedResults.map((item, index) => {
       const musicInfo = {
         name: item.title || '未知歌曲',
         singer: item.artist || '未知歌手',
@@ -172,8 +170,10 @@ const musicSearchModule = {
   },
 
   async search(keyword, page = 1, limit, retryNum = 0) {
+    const startTime = Date.now()
     log.info('[Bilibili Search] ========== search 开始 ==========')
     log.info('[Bilibili Search] keyword: ' + keyword + ', page: ' + page + ', limit: ' + limit + ', retryNum: ' + retryNum)
+    log.info('[Bilibili Search] 当前模块状态: total=' + this.total + ', allPage=' + this.allPage + ', page=' + this.page)
     
     if (retryNum > 2) {
       log.error('[Bilibili Search] 重试次数超过上限，放弃搜索')
@@ -185,7 +185,7 @@ const musicSearchModule = {
     try {
       log.info('[Bilibili Search] 开始获取Cookie')
       await getCookie()
-      log.info('[Bilibili Search] Cookie获取完成')
+      log.info('[Bilibili Search] Cookie获取完成，Cookie状态: ' + (cookie ? '已设置' : '未设置'))
 
       const params = {
         context: "",
@@ -298,8 +298,12 @@ const musicSearchModule = {
         limit,
         source: 'bilibili',
       }
+      const endTime = Date.now()
+      const duration = endTime - startTime
       log.info('[Bilibili Search] ========== search 成功结束 ==========')
       log.info('[Bilibili Search] 返回结果: list数量=' + result.list.length + ', allPage=' + result.allPage + ', total=' + result.total)
+      log.info('[Bilibili Search] 搜索耗时: ' + duration + 'ms')
+      log.info('[Bilibili Search] 是否还有更多数据: ' + (this.allPage > page ? '是' : '否'))
       return Promise.resolve(result)
     } catch (error) {
       log.error('[Bilibili Search] ========== search 异常 ==========')

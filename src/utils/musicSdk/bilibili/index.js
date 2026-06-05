@@ -246,20 +246,26 @@ async function getBilibiliMusicUrl(musicInfo, type) {
     
     log.info('[Bilibili] 选择音质 type: ' + type + ', len: ' + len)
     let selectedAudios = []
+    
+    // 哔哩哔哩音质 ID: 30216=64K, 30232=132K, 30280=192K
     switch (type) {
-      case '128k':
-        selectedAudios = [audios[0]]
+      case '64k':
+        selectedAudios = audios.filter(a => a.id === 30216)
+        if (selectedAudios.length === 0) selectedAudios = [audios[0]]
         break
-      case '320k':
-        selectedAudios = [audios[Math.min(1, len - 1)]]
+      case '132k':
+        selectedAudios = audios.filter(a => a.id === 30232)
+        if (selectedAudios.length === 0) selectedAudios = [audios[Math.min(1, len - 1)]]
         break
-      case 'flac':
-      case 'flac24bit':
-        selectedAudios = [audios[len - 1]]
+      case '192k':
+        selectedAudios = audios.filter(a => a.id === 30280)
+        if (selectedAudios.length === 0) selectedAudios = [audios[len - 1]]
         break
       default:
         selectedAudios = [audios[len - 1]]
     }
+    
+    log.info('[Bilibili] 选择的音质 ID: ' + JSON.stringify(selectedAudios.map(a => a.id)))
     
     // 尝试选中的音质，如果不行则尝试所有音质
     url = findBestUrl(selectedAudios) || findBestUrl(audios)
@@ -380,8 +386,12 @@ const bilibili = {
       log.info('[Bilibili] getMusicUrl songInfo.interval: ' + JSON.stringify(songInfo.interval))
     }
 
+    // 哔哩哔哩音源固定使用 192K 音质，不受设置影响
+    const bilibiliType = '192k'
+    log.info('[Bilibili] 哔哩哔哩音源固定使用 192K 音质，忽略传入的 type: ' + type)
+
     const requestObj = new Object()
-    requestObj.promise = getBilibiliMusicUrl(songInfo, type)
+    requestObj.promise = getBilibiliMusicUrl(songInfo, bilibiliType)
       .then(result => {
         log.info('[Bilibili] getMusicUrl .then - result 类型: ' + typeof result)
         log.info('[Bilibili] getMusicUrl .then - result 是否为 null: ' + (result == null))

@@ -12,6 +12,7 @@ import {filterFileName, sizeFormate} from "@/utils";
 import { getPicUrl } from '@/core/music/online'
 import DownloadTask = LX.Download.DownloadTask
 import wySdk from '@/utils/musicSdk/wy'
+import bilibiliSdk from '@/utils/musicSdk/bilibili'
 
 const taskQueue: DownloadTask[] = [];
 let isProcessing = false;
@@ -50,6 +51,7 @@ const startDownload = async (task: DownloadTask) => {
   downloadActions.updateTask(task.id, { status: 'downloading' });
 
   let url: string;
+  let headers: any = getDownloadHeaders(task);
   if (task.isForceCookie && task.musicInfo.source === 'wy') {
     const highQualityLevels: LX.Quality[] = ['flac', 'hires', 'master', 'atmos', 'atmos_plus'];
     console.log(`[Batch Download] Forcing cookie for ${task.musicInfo.name}`);
@@ -66,7 +68,40 @@ const startDownload = async (task: DownloadTask) => {
       return;
     }
   } else {
-    url = await getMusicUrl({ musicInfo: task.musicInfo, quality: task.quality, isRefresh: true });
+    // 对于 bilibili 源，我们直接调用 SDK 来获取完整信息（包括 headers）
+    if (task.musicInfo.source === 'bilibili') {
+      console.log(`[Download] 处理 bilibili 源`);
+      try {
+        const result = await bilibiliSdk.getMusicUrl(task.musicInfo, task.quality).promise;
+        url = result.url;
+        if (result.headers) {
+          headers = result.headers;
+          console.log(`[Download] 使用 bilibili 自定义 headers`);
+        }
+      } catch (error: any) {
+        toast(`${task.musicInfo.name} 下载失败: ${error.message}`, 'short');
+        removeTask(task.id);
+        return;
+      }
+    } else {
+      // 其他源使用正常流程
+      url = await getMusicUrl({ musicInfo: task.musicInfo, quality: task.quality, isRefresh: true });
+    }
+  }
+
+  // 对于 bilibili 源，先以临时文件名下载，下载完成后再重命名为 mp3
+  const isBilibiliSource = task.musicInfo.source === 'bilibili';
+  let finalFilePath = task.filePath;
+  
+  // 获取 URL 中的真实扩展名
+  const urlExtension = getFileExtensionFromUrl(url);
+  
+  // 如果是 bilibili 源，先使用临时扩展名下载
+  let downloadFilePath = task.filePath;
+  if (isBilibiliSource && urlExtension) {
+    const downloadDir = settingState.setting['download.path'] || (RNFetchBlob.fs.dirs.MusicDir + '/LX-N Music');
+    downloadFilePath = `${downloadDir}/${task.fileName}.download.${urlExtension}`;
+    console.log(`[Download] Bilibili 源使用临时路径下载: ${downloadFilePath}`);
   }
 
   await requestStoragePermission()
@@ -76,11 +111,12 @@ const startDownload = async (task: DownloadTask) => {
   }
   let lastWritten = 0;
   let lastTime = Date.now();
+  let downloadedFilePath: string;
   try {
     const downloadTask = RNFetchBlob.config({
-      path: task.filePath,
+      path: downloadFilePath,
       fileCache: true,
-    }).fetch('GET', url, getDownloadHeaders(task));
+    }).fetch('GET', url, headers);
 
     currentDownloadTask = downloadTask;
     downloadTask.progress({ interval: 500 }, (written, total) => {
@@ -105,16 +141,37 @@ const startDownload = async (task: DownloadTask) => {
       });
     });
 
-    await downloadTask;
-    console.log('下载完成:', task.fileName);
-    await handleMetadata(task, task.filePath);
-    try {
-      await RNFetchBlob.fs.scanFile([{ path: task.filePath }]);
-      console.log(`[Download Manager] Media scan requested for: ${task.filePath}`);
-    } catch (scanError) {
-      console.error(`[Download Manager] Failed to request media scan for ${task.filePath}:`, scanError);
+    const res = await downloadTask;
+    downloadedFilePath = res.path();
+    console.log('下载完成:', downloadedFilePath);
+    
+    // 对于 bilibili 源，下载完成后重命名为 mp3
+    if (isBilibiliSource) {
+      // task.filePath 已经是带 .mp3 扩展名的路径
+      const correctedPath = task.filePath;
+      try {
+        await RNFetchBlob.fs.mv(downloadedFilePath, correctedPath);
+        downloadedFilePath = correctedPath;
+        console.log('[Download] Bilibili 源重命名为 MP3:', downloadedFilePath);
+      } catch (renameError) {
+        console.warn('[Download] Bilibili 源重命名失败:', renameError);
+      }
     }
-    downloadActions.updateTask(task.id, { status: 'completed', progress: { ...task.progress, percent: 1 } });
+    
+    // 对于 bilibili 源，跳过元数据处理（歌词、封面等）
+    if (!isBilibiliSource) {
+      await handleMetadata(task, downloadedFilePath);
+    } else {
+      console.log('[Download] Bilibili 源跳过元数据处理');
+      downloadActions.updateTask(task.id, { metadataStatus: { cover: 'success', lyric: 'success', tags: 'success' } });
+    }
+    try {
+      await RNFetchBlob.fs.scanFile([{ path: downloadedFilePath }]);
+      console.log(`[Download Manager] Media scan requested for: ${downloadedFilePath}`);
+    } catch (scanError) {
+      console.error(`[Download Manager] Failed to request media scan for ${downloadedFilePath}:`, scanError);
+    }
+    downloadActions.updateTask(task.id, { status: 'completed', progress: { ...task.progress, percent: 1 }, filePath: downloadedFilePath });
 
     if (!task.isForceCookie) {
       toast(`${task.fileName} 下载完成!`, 'short');
@@ -126,6 +183,11 @@ const startDownload = async (task: DownloadTask) => {
 
 const handleMetadata = async (task: DownloadTask, filePath: string) => {
   console.log('开始处理元数据:', filePath);
+  
+  // 获取文件扩展名，用于后续处理
+  const fileExt = filePath.substring(filePath.lastIndexOf('.') + 1).toLowerCase();
+  console.log(`[Metadata] 文件格式: ${fileExt}`);
+  
   // 写入标签
   if (settingState.setting['download.writeMetadata']) {
     try {
@@ -139,7 +201,8 @@ const handleMetadata = async (task: DownloadTask, filePath: string) => {
         albumName: task.musicInfo.meta.albumName,
       }, true);
       downloadActions.updateTask(task.id, { metadataStatus: { ...task.metadataStatus, tags: 'success' } });
-    } catch (e) {
+    } catch (e: any) {
+      console.error('[Metadata] 标签信息写入失败:', e?.message || e);
       toast('标签信息写入失败', 'short');
       downloadActions.updateTask(task.id, { metadataStatus: { ...task.metadataStatus, tags: 'fail' } });
     }
@@ -150,14 +213,17 @@ const handleMetadata = async (task: DownloadTask, filePath: string) => {
   if (settingState.setting['download.writePicture']) {
     try {
       const picUrl = await getPicUrl({ musicInfo: task.musicInfo });
-      const extension = getFileExtensionFromUrl(picUrl)
+      const extension = getFileExtensionFromUrl(picUrl) || 'jpg'
       const picPath = `${downloadDir}/temp.${extension}`
-      await RNFetchBlob.config({ path: picPath }).fetch('GET', picUrl);
-      await writePic(filePath, picPath);
-      await unlink(picPath)
+      console.log(`[Metadata] 下载封面: ${picUrl} -> ${picPath}`);
+      const res = await RNFetchBlob.config({ path: picPath }).fetch('GET', picUrl);
+      console.log(`[Metadata] 封面下载完成，开始写入到音频文件`);
+      await writePic(filePath, res.path());
+      await unlink(res.path());
+      console.log(`[Metadata] 封面写入完成`);
       downloadActions.updateTask(task.id, { metadataStatus: { ...task.metadataStatus, cover: 'success' } });
-    } catch (e) {
-      console.log(e)
+    } catch (e: any) {
+      console.error('[Metadata] 封面写入失败:', e?.message || e);
       toast('封面写入失败', 'short');
       downloadActions.updateTask(task.id, { metadataStatus: { ...task.metadataStatus, cover: 'fail' } });
     }
@@ -172,14 +238,22 @@ const handleMetadata = async (task: DownloadTask, filePath: string) => {
 
       if (settingState.setting['download.writeEmbedLyric']) {
         const embedLyricContent = mergeLyrics(lyrics.lyric, lyrics.tlyric, romaLyric);
-        if (embedLyricContent) await writeLyric(filePath, embedLyricContent);
+        if (embedLyricContent) {
+          console.log(`[Metadata] 写入嵌入歌词`);
+          await writeLyric(filePath, embedLyricContent);
+        }
       }
       if (settingState.setting['download.writeLyric']) {
         const finalLyricContent = mergeLyrics(lyrics.lyric, lyrics.tlyric, romaLyric);
-        if (finalLyricContent) await writeFile(`${baseFilePath}.lrc`, finalLyricContent);
+        if (finalLyricContent) {
+          const lrcPath = `${baseFilePath}.lrc`;
+          console.log(`[Metadata] 写入歌词文件: ${lrcPath}`);
+          await writeFile(lrcPath, finalLyricContent);
+        }
       }
       downloadActions.updateTask(task.id, { metadataStatus: { ...task.metadataStatus, lyric: 'success' } });
-    } catch (e) {
+    } catch (e: any) {
+      console.error('[Metadata] 歌词写入失败:', e?.message || e);
       toast('歌词写入失败', 'short');
       downloadActions.updateTask(task.id, { metadataStatus: { ...task.metadataStatus, lyric: 'fail' } });
     }
@@ -193,25 +267,32 @@ export const retryMetadata = async (taskId: string) => {
     return;
   }
 
+  console.log(`[Retry Metadata] 开始重试元数据写入，文件: ${task.filePath}`);
   toast('正在尝试重新获取元信息...');
   const filePath = task.filePath;
   const metadataStatus = { ...task.metadataStatus };
+
+  // 获取文件扩展名
+  const fileExt = filePath.substring(filePath.lastIndexOf('.') + 1).toLowerCase();
+  console.log(`[Retry Metadata] 文件格式: ${fileExt}`);
 
   // 重试写入标签
   if (metadataStatus.tags === 'fail' && settingState.setting['download.writeMetadata']) {
     try {
       const title = settingState.setting['download.writeAlias'] && task.musicInfo.alias
-      ? `${task.musicInfo.name} (${task.musicInfo.alias})`
-      : task.musicInfo.name;
+        ? `${task.musicInfo.name} (${task.musicInfo.alias})`
+        : task.musicInfo.name;
 
+      console.log(`[Retry Metadata] 写入标签: title=${title}, singer=${task.musicInfo.singer}`);
       await writeMetadata(filePath, {
         name: title,
         singer: task.musicInfo.singer,
         albumName: task.musicInfo.meta.albumName,
       }, true);
       metadataStatus.tags = 'success';
+      console.log(`[Retry Metadata] 标签写入成功`);
     } catch (e: any) {
-      console.error(`[Retry Metadata] Write Tags Error for ${task.musicInfo.name}:`, e.message);
+      console.error(`[Retry Metadata] Write Tags Error for ${task.musicInfo.name}:`, e?.message || e);
       metadataStatus.tags = 'fail';
     }
   }
@@ -220,15 +301,18 @@ export const retryMetadata = async (taskId: string) => {
   if (metadataStatus.cover === 'fail' && settingState.setting['download.writePicture']) {
     try {
       const picUrl = await getPicUrl({ musicInfo: task.musicInfo as LX.Music.MusicInfoOnline });
-      const extension = getFileExtensionFromUrl(picUrl);
+      const extension = getFileExtensionFromUrl(picUrl) || 'jpg';
       const picPath = `${RNFetchBlob.fs.dirs.CacheDir}/lx_temp_pic_${task.id}.${extension}`;
 
-      await RNFetchBlob.config({ path: picPath }).fetch('GET', picUrl);
-      await writePic(filePath, picPath);
-      await unlink(picPath);
+      console.log(`[Retry Metadata] 下载封面: ${picUrl} -> ${picPath}`);
+      const res = await RNFetchBlob.config({ path: picPath }).fetch('GET', picUrl);
+      console.log(`[Retry Metadata] 封面下载完成，开始写入`);
+      await writePic(filePath, res.path());
+      await unlink(res.path());
       metadataStatus.cover = 'success';
+      console.log(`[Retry Metadata] 封面写入成功`);
     } catch (e: any) {
-      console.error(`[Retry Metadata] Write Cover Error for ${task.musicInfo.name}:`, e.message);
+      console.error(`[Retry Metadata] Write Cover Error for ${task.musicInfo.name}:`, e?.message || e);
       metadataStatus.cover = 'fail';
     }
   }
@@ -242,15 +326,23 @@ export const retryMetadata = async (taskId: string) => {
 
       if (settingState.setting['download.writeEmbedLyric']) {
         const embedLyricContent = mergeLyrics(lyrics.lyric, lyrics.tlyric, romaLyric);
-        if (embedLyricContent) await writeLyric(filePath, embedLyricContent);
+        if (embedLyricContent) {
+          console.log(`[Retry Metadata] 写入嵌入歌词`);
+          await writeLyric(filePath, embedLyricContent);
+        }
       }
       if (settingState.setting['download.writeLyric']) {
         const finalLyricContent = mergeLyrics(lyrics.lyric, lyrics.tlyric, romaLyric);
-        if (finalLyricContent) await writeFile(`${baseFilePath}.lrc`, finalLyricContent);
+        if (finalLyricContent) {
+          const lrcPath = `${baseFilePath}.lrc`;
+          console.log(`[Retry Metadata] 写入歌词文件: ${lrcPath}`);
+          await writeFile(lrcPath, finalLyricContent);
+        }
       }
       metadataStatus.lyric = 'success';
+      console.log(`[Retry Metadata] 歌词写入成功`);
     } catch (e: any) {
-      console.error(`[Retry Metadata] Write Lyric Error for ${task.musicInfo.name}:`, e.message);
+      console.error(`[Retry Metadata] Write Lyric Error for ${task.musicInfo.name}:`, e?.message || e);
       metadataStatus.lyric = 'fail';
     }
   }
@@ -310,7 +402,11 @@ export const resumeTask = async (taskId: string) => {
 };
 
 export const addTask = (musicInfo: LX.Music.MusicInfo, quality: LX.Quality, isForceCookie: boolean = false) => {
-  const extension = getFileExtension(quality);
+  // 对于 bilibili 源，默认使用 mp3 扩展名
+  let extension = getFileExtension(quality);
+  if (musicInfo.source === 'bilibili') {
+    extension = 'mp3';
+  }
 
   let finalSingerString = musicInfo.singer;
   // 文件名过长的情况下，只取前6个歌手名

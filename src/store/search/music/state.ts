@@ -31,7 +31,7 @@ const state: InitState = {
     all: {
       page: 1,
       maxPage: 0,
-      limit: 30,
+      limit: 30, // 调整搜索结果数量限制
       total: 0,
       list: [],
       key: null,
@@ -46,7 +46,7 @@ for (const source of music.sources) {
   state.listInfos[source.id as LX.OnlineSource] = {
     page: 1,
     maxPage: 0,
-    limit: 30,
+    limit: 30, // 调整搜索结果数量限制
     total: 0,
     list: [],
     key: '',

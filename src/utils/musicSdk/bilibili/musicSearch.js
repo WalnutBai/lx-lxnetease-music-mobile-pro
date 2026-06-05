@@ -105,25 +105,48 @@ function formatMedia(result) {
     pic: result.pic?.startsWith("//") ? `http:${result.pic}` : result.pic,
     duration: durationToSec(result.duration),
     tags: result.tag?.split(","),
+    // 保存可能用于排序的字段
+    play: result.play,
+    view: result.view,
+    like: result.like,
+    pubdate: result.pubdate,
   }
 }
 
 const musicSearchModule = {
-  limit: 20,
+  limit: 30, // 调整搜索结果数量，避免请求过多导致问题
   total: 0,
   page: 0,
   allPage: 1,
 
   handleResult(searchResults, page, limit) {
     log.info('[Bilibili Search] handleResult - 原始结果数量: ' + searchResults.length + ', page: ' + page + ', limit: ' + limit)
-    this.total = searchResults.length
-    this.allPage = Math.ceil(this.total / limit)
+    
+    // 尝试按热度排序（如果有播放/浏览数据）
+    let sortedResults = [...searchResults]
+    try {
+      // 优先按播放量排序
+      sortedResults.sort((a, b) => {
+        const aPlay = a.play || a.view || 0
+        const bPlay = b.play || b.view || 0
+        // 从高到低排序
+        return Number(bPlay) - Number(aPlay)
+      })
+      log.info('[Bilibili Search] handleResult - 已按热度排序')
+    } catch (e) {
+      log.info('[Bilibili Search] handleResult - 排序失败，保持原始顺序: ' + e)
+    }
+    
+    this.total = sortedResults.length
+    // 如果当前页返回的数据量少于请求的limit，说明这是最后一页
+    const actualPageSize = sortedResults.length
+    this.allPage = actualPageSize < limit ? page : Math.ceil(this.total / limit)
     this.page = page
 
     const startIndex = (page - 1) * limit
     const endIndex = startIndex + limit
-    const pageResults = searchResults.slice(startIndex, endIndex)
-    log.info('[Bilibili Search] handleResult - 分页结果数量: ' + pageResults.length)
+    const pageResults = sortedResults.slice(startIndex, endIndex)
+    log.info('[Bilibili Search] handleResult - 分页结果数量: ' + pageResults.length + ', allPage: ' + this.allPage)
 
     const list = pageResults.map((item, index) => {
       const musicInfo = {
@@ -172,7 +195,7 @@ const musicSearchModule = {
       const params = {
         context: "",
         page,
-        order: "",
+        order: "", // 恢复原来的排序方式
         page_size: limit,
         keyword,
         duration: "",

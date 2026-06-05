@@ -36,6 +36,8 @@ const setLists = (
   let totals = []
   let limit = 0
   let list = [] as LX.Music.MusicInfoOnline[]
+  const onlyBilibili = results.length === 1 && results[0].source === 'bilibili'
+  
   for (const source of results) {
     state.maxPages[source.source] = source.allPage
     limit = Math.max(source.limit, limit)
@@ -44,10 +46,17 @@ const setLists = (
     pages.push(source.allPage)
     totals.push(source.total)
   }
-  list = handleSortList(
-    list.map((s) => toNewMusicInfo(s) as LX.Music.MusicInfoOnline),
-    text
-  )
+  
+  // 如果只有bilibili的结果，保持热度排序；否则按关键词相似度排序
+  if (onlyBilibili) {
+    list = list.map((s) => toNewMusicInfo(s) as LX.Music.MusicInfoOnline)
+  } else {
+    list = handleSortList(
+      list.map((s) => toNewMusicInfo(s) as LX.Music.MusicInfoOnline),
+      text
+    )
+  }
+  
   let listInfo = state.listInfos.all
   listInfo.maxPage = Math.max(0, ...pages)
   const total = Math.max(0, ...totals)

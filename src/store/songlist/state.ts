@@ -116,6 +116,8 @@ const state: InitState = {
 for (const source of music.sources) {
   const songList = music[source.id as Source]?.songList
   if (!songList) continue
+  // 排除bilibili，因为它没有歌单功能
+  if (source.id === 'bilibili') continue
   state.sources.push(source.id as Source)
   state.sortList[source.id as Source] = songList.sortList as SortInfo[]
 }

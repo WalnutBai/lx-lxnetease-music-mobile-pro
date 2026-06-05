@@ -285,6 +285,46 @@ async function getBilibiliMusicUrl(musicInfo, type) {
 
 const bilibili = {
   musicSearch,
+  
+  // 添加安全的songList占位符，防止报错
+  songList: {
+    sortList: [],
+    getTags() {
+      return Promise.resolve({
+        tags: [],
+        hotTag: []
+      })
+    },
+    getList() {
+      return Promise.resolve({
+        list: [],
+        total: 0,
+        page: 1,
+        limit: 30,
+        maxPage: 0,
+        key: null
+      })
+    },
+    getListDetail() {
+      return Promise.resolve({
+        list: [],
+        total: 0,
+        page: 1,
+        limit: 30,
+        maxPage: 0,
+        key: null,
+        info: {}
+      })
+    },
+    search() {
+      return Promise.resolve({
+        list: [],
+        total: 0,
+        limit: 30,
+        source: 'bilibili',
+      })
+    }
+  },
 
   getMusicUrl(songInfo, type) {
     log.info('[Bilibili] ========== getMusicUrl 被调用 ==========')
@@ -317,8 +357,9 @@ const bilibili = {
           log.info('[Bilibili] getMusicUrl .then - result.url 值: ' + (result.url ? result.url.substring(0, 80) + '...' : '空'))
           log.info('[Bilibili] getMusicUrl .then - result.headers 是否存在: ' + (result.headers != null))
         }
-        const finalResult = { url: result?.url, type }
-        log.info('[Bilibili] getMusicUrl .then - 最终返回: url类型=' + typeof finalResult.url + ', url是否为空=' + (finalResult.url == null) + ', type=' + finalResult.type)
+        // 同时返回 url 和 headers 信息，方便后续下载使用
+        const finalResult = { url: result?.url, headers: result?.headers, type }
+        log.info('[Bilibili] getMusicUrl .then - 最终返回: url类型=' + typeof finalResult.url + ', url是否为空=' + (finalResult.url == null) + ', type=' + finalResult.type + ', hasHeaders=' + (finalResult.headers != null))
         return finalResult
       })
       .catch(err => {
@@ -342,6 +383,19 @@ const bilibili = {
     const requestObj = new Object()
     requestObj.promise = Promise.resolve({ lyric: null })
     return requestObj
+  },
+
+  getMusicDetailPageUrl(songInfo) {
+    log.info('[Bilibili] getMusicDetailPageUrl 被调用 - songInfo.name: ' + (songInfo?.name || '未知'))
+    const bvid = songInfo?.bvid || songInfo?._bilibiliData?.bvid || ''
+    if (bvid) {
+      return `https://www.bilibili.com/video/${bvid}`
+    }
+    const aid = songInfo?.aid || songInfo?._bilibiliData?.aid || ''
+    if (aid) {
+      return `https://www.bilibili.com/video/av${aid}`
+    }
+    return ''
   },
 }
 

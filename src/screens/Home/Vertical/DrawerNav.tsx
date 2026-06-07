@@ -1,177 +1,39 @@
-import { memo, useMemo, useRef, useCallback, useEffect, useState } from 'react'
-import { ScrollView, TouchableOpacity, View, Animated, PanResponder } from 'react-native'
+import { memo, useMemo, useRef, useState, useCallback } from 'react'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { useI18n } from '@/lang'
 import { useNavActiveId, useStatusbarHeight } from '@/store/common/hook'
 import { useTheme } from '@/store/theme/hook'
 import { Icon } from '@/components/common/Icon'
 import { SvgIcon } from '@/components/common/SvgIcon'
 import { confirmDialog, createStyle, exitApp as backHome } from '@/utils/tools'
-import { NAV_MENUS, LIST_IDS } from '@/config/constant'
+import { NAV_MENUS } from '@/config/constant'
 import type { InitState } from '@/store/common/state'
 import { exitApp, setNavActiveId } from '@/core/common'
 import Text from '@/components/common/Text'
 import { useSettingValue } from '@/store/setting/hook'
-import React from 'react'
 import { Animated as AnimatedType, Easing } from 'react-native'
 import { useMyList } from '@/store/list/hook'
-import { setActiveList, updateUserListPosition } from '@/core/list'
+import { setActiveList } from '@/core/list'
 import { navigations } from "@/navigation"
 import commonState from '@/store/common/state'
 
-const LONG_PRESS_MS = 350;
-const DRAG_CANCEL_THRESHOLD = 6;
-
-interface DragAnim {
-  translateY: AnimatedType.Value;
-  scale: AnimatedType.Value;
-  opacity: AnimatedType.Value;
-}
-
-const createAnim = (): DragAnim => ({
-  translateY: new AnimatedType.Value(0),
-  scale: new AnimatedType.Value(1),
-  opacity: new AnimatedType.Value(1),
-});
-
-interface DraggableListItemProps {
+interface MyListItemProps {
   item: LX.List.MyListInfo;
-  index: number;
-  isDragging: boolean;
-  isDragSource: boolean;
-  translateY: AnimatedType.Value;
-  scale: AnimatedType.Value;
-  opacity: AnimatedType.Value;
-  zIndex: number;
-  onLayoutHeight: (index: number, height: number) => void;
-  onLongPressStart: (index: number) => void;
-  onDragMove: (dy: number) => void;
-  onDragRelease: () => void;
-  onDragCancel: () => void;
   onPress: () => void;
 }
 
-const DraggableListItem = memo(({
+const MyListItem = memo(({
   item,
-  index,
-  isDragging,
-  isDragSource,
-  translateY,
-  scale,
-  opacity,
-  zIndex,
-  onLayoutHeight,
-  onLongPressStart,
-  onDragMove,
-  onDragRelease,
-  onDragCancel,
   onPress,
-}: DraggableListItemProps) => {
+}: MyListItemProps) => {
   const theme = useTheme();
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isActivatedRef = useRef(false);
-
-  const clearLongPressTimer = () => {
-    if (longPressTimer.current != null) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      clearLongPressTimer();
-    };
-  }, []);
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onStartShouldSetPanResponderCapture: () => true,
-        onMoveShouldSetPanResponder: (_e, gs) => {
-          if (!isActivatedRef.current) return false;
-          return Math.abs(gs.dy) > 1 || Math.abs(gs.dx) > 1;
-        },
-        onMoveShouldSetPanResponderCapture: (_e, gs) => {
-          if (!isActivatedRef.current) return false;
-          return Math.abs(gs.dy) > 2;
-        },
-        onPanResponderGrant: () => {
-          clearLongPressTimer();
-          isActivatedRef.current = false;
-          longPressTimer.current = setTimeout(() => {
-            longPressTimer.current = null;
-            isActivatedRef.current = true;
-            onLongPressStart(index);
-          }, LONG_PRESS_MS);
-        },
-        onPanResponderMove: (_e, gs) => {
-          if (!isActivatedRef.current) {
-            if (
-              Math.abs(gs.dy) > DRAG_CANCEL_THRESHOLD ||
-              Math.abs(gs.dx) > DRAG_CANCEL_THRESHOLD
-            ) {
-              clearLongPressTimer();
-            }
-            return;
-          }
-          onDragMove(gs.dy);
-        },
-        onPanResponderRelease: () => {
-          clearLongPressTimer();
-          if (isActivatedRef.current) {
-            isActivatedRef.current = false;
-            onDragRelease();
-          } else {
-            onPress();
-          }
-        },
-        onPanResponderTerminate: () => {
-          clearLongPressTimer();
-          if (isActivatedRef.current) {
-            isActivatedRef.current = false;
-            onDragCancel();
-          }
-        },
-        onPanResponderTerminationRequest: () => !isActivatedRef.current,
-      }),
-    [index, onLongPressStart, onDragMove, onDragRelease, onDragCancel, onPress]
-  );
-
-  const transform = isDragSource
-    ? [{ translateY }, { scale }]
-    : [{ translateY }];
-  const elevation = isDragSource ? 8 : 0;
-  const shadowOpacity = isDragSource ? 0.25 : 0;
 
   return (
-    <AnimatedType.View
-      onLayout={(e) => onLayoutHeight(index, e.nativeEvent.layout.height)}
-      style={[
-        styles.subMenuItem,
-        {
-          backgroundColor: isDragSource ? theme['c-primary-background-active'] : 'transparent',
-          opacity,
-          transform,
-          zIndex,
-          elevation,
-          shadowOpacity,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowRadius: 4,
-          borderRadius: 8,
-        },
-      ]}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-        <View style={styles.dragHandle} {...panResponder.panHandlers}>
-          <Icon name="menu" color={theme['c-font-label']} size={14} />
-        </View>
-        <Text size={14} color={theme['c-font-label']} numberOfLines={1}>
-          {item.name}
-        </Text>
-      </View>
-    </AnimatedType.View>
+    <TouchableOpacity style={styles.subMenuItem} onPress={onPress}>
+      <Text size={14} color={theme['c-font-label']} numberOfLines={1}>
+        {item.name}
+      </Text>
+    </TouchableOpacity>
   );
 });
 
@@ -182,24 +44,6 @@ const CollapsibleMyListItem = () => {
   const [isExpanded, setExpanded] = useState(false);
   const animation = useRef(new AnimatedType.Value(0)).current;
   const contentHeight = useRef(0);
-
-  const heightsRef = useRef<number[]>([]);
-  const animsRef = useRef<DragAnim[]>([]);
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const draggingIndexRef = useRef<number | null>(null);
-  const targetIndexRef = useRef<number | null>(null);
-  const lastTargetRef = useRef<number | null>(null);
-
-  if (animsRef.current.length !== allList.length) {
-    if (animsRef.current.length < allList.length) {
-      for (let i = animsRef.current.length; i < allList.length; i++) {
-        animsRef.current.push(createAnim());
-      }
-    } else {
-      animsRef.current.length = allList.length;
-    }
-    heightsRef.current.length = allList.length;
-  }
 
   const toggleCollapse = () => {
     const toValue = isExpanded ? 0 : 1;
@@ -217,131 +61,6 @@ const CollapsibleMyListItem = () => {
     setActiveList(listId);
     global.app_event.changeMenuVisible(false);
   }, []);
-
-  const handleLayoutHeight = useCallback((index: number, height: number) => {
-    heightsRef.current[index] = height;
-  }, []);
-
-  const resetAllAnims = useCallback(() => {
-    for (const anim of animsRef.current) {
-      anim.translateY.stopAnimation();
-      anim.scale.stopAnimation();
-      anim.opacity.stopAnimation();
-      anim.translateY.setValue(0);
-      anim.scale.setValue(1);
-      anim.opacity.setValue(1);
-    }
-  }, []);
-
-  const handleLongPressStart = useCallback((index: number) => {
-    draggingIndexRef.current = index;
-    targetIndexRef.current = index;
-    lastTargetRef.current = index;
-    setDraggingIndex(index);
-    const anim = animsRef.current[index];
-    if (!anim) return;
-    AnimatedType.parallel([
-      AnimatedType.spring(anim.scale, { toValue: 1.03, useNativeDriver: true, friction: 7 }),
-      AnimatedType.timing(anim.opacity, { toValue: 0.92, duration: 120, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  const computeTargetIndex = useCallback((from: number, dy: number) => {
-    const heights = heightsRef.current;
-    const n = heights.length;
-    if (n === 0) return from;
-
-    const cumulative: number[] = [];
-    let acc = 0;
-    for (let i = 0; i < n; i++) {
-      cumulative.push(acc);
-      acc += heights[i] ?? 0;
-    }
-    const draggedHeight = heights[from] ?? 0;
-    const originalTop = cumulative[from] ?? 0;
-    const newCenter = originalTop + dy + draggedHeight / 2;
-
-    let target = from;
-    let minDist = Infinity;
-    for (let i = 0; i < n; i++) {
-      const itemCenter = (cumulative[i] ?? 0) + (heights[i] ?? 0) / 2;
-      const dist = Math.abs(itemCenter - newCenter);
-      if (dist < minDist) {
-        minDist = dist;
-        target = i;
-      }
-    }
-    return target;
-  }, []);
-
-  const animateLayout = useCallback((from: number, to: number) => {
-    const heights = heightsRef.current;
-    const draggedHeight = heights[from] ?? 0;
-    for (let i = 0; i < animsRef.current.length; i++) {
-      if (i === from) continue;
-      const anim = animsRef.current[i];
-      let target = 0;
-      if (from < to) {
-        if (i > from && i <= to) target = -draggedHeight;
-      } else if (from > to) {
-        if (i >= to && i < from) target = draggedHeight;
-      }
-      AnimatedType.spring(anim.translateY, {
-        toValue: target,
-        useNativeDriver: true,
-        friction: 9,
-        tension: 70,
-      }).start();
-    }
-  }, []);
-
-  const handleDragMove = useCallback(
-    (dy: number) => {
-      const from = draggingIndexRef.current;
-      if (from == null) return;
-      const anim = animsRef.current[from];
-      if (anim) anim.translateY.setValue(dy);
-      const target = computeTargetIndex(from, dy);
-      targetIndexRef.current = target;
-      if (target !== lastTargetRef.current) {
-        lastTargetRef.current = target;
-        animateLayout(from, target);
-      }
-    },
-    [computeTargetIndex, animateLayout]
-  );
-
-  const persistReorder = useCallback((from: number, to: number) => {
-    if (from === to) return;
-    const next = [...allList];
-    const [moved] = next.splice(from, 1);
-    if (!moved) return;
-    next.splice(to, 0, moved);
-    const ids = next.map(item => item.id);
-    void updateUserListPosition(ids);
-  }, [allList]);
-
-  const handleDragRelease = useCallback(() => {
-    const from = draggingIndexRef.current;
-    const to = targetIndexRef.current ?? from;
-    draggingIndexRef.current = null;
-    targetIndexRef.current = null;
-    lastTargetRef.current = null;
-    setDraggingIndex(null);
-    if (from == null) return;
-    resetAllAnims();
-    if (to != null && to !== from) {
-      persistReorder(from, to);
-    }
-  }, [persistReorder, resetAllAnims]);
-
-  const handleDragCancel = useCallback(() => {
-    draggingIndexRef.current = null;
-    targetIndexRef.current = null;
-    lastTargetRef.current = null;
-    setDraggingIndex(null);
-    resetAllAnims();
-  }, [resetAllAnims]);
 
   const animatedHeight = animation.interpolate({
     inputRange: [0, 1],
@@ -369,29 +88,13 @@ const CollapsibleMyListItem = () => {
           }}
           style={{ position: 'absolute', width: '100%' }}
         >
-          {allList.map((list, index) => {
-            const anim = animsRef.current[index] ?? createAnim();
-            const isDragSource = draggingIndex === index;
-            return (
-              <DraggableListItem
-                key={list.id}
-                item={list}
-                index={index}
-                isDragging={draggingIndex != null}
-                isDragSource={isDragSource}
-                translateY={anim.translateY}
-                scale={anim.scale}
-                opacity={anim.opacity}
-                zIndex={isDragSource ? 10 : 1}
-                onLayoutHeight={handleLayoutHeight}
-                onLongPressStart={handleLongPressStart}
-                onDragMove={handleDragMove}
-                onDragRelease={handleDragRelease}
-                onDragCancel={handleDragCancel}
-                onPress={() => handleSelect(list.id)}
-              />
-            );
-          })}
+          {allList.map((list) => (
+            <MyListItem
+              key={list.id}
+              item={list}
+              onPress={() => handleSelect(list.id)}
+            />
+          ))}
         </View>
       </AnimatedType.View>
     </View>
@@ -420,9 +123,6 @@ const styles = createStyle({
     paddingVertical: 12,
     paddingLeft: 55,
     paddingRight: 10,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   collapsibleMenuItemText: {
     flex: 1,
@@ -456,13 +156,6 @@ const styles = createStyle({
   },
   footerBtn: {
     padding: 10,
-  },
-  dragHandle: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    marginRight: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 })
 

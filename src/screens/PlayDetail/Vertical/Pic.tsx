@@ -66,15 +66,21 @@ export default memo(({ componentId }: { componentId: string }) => {
       startAnimation();
     } else {
       stopAnimation();
+      // 关闭旋转时立即重置角度
+      if (!isCoverSpin) {
+        spinValue.setValue(0);
+      }
     }
-  }, [isPlay, isCoverSpin, startAnimation, stopAnimation]);
+  }, [isPlay, isCoverSpin, startAnimation, stopAnimation, spinValue]);
 
   useEffect(() => {
     stopAnimation();
+    // 切歌时重置角度
+    spinValue.setValue(0);
     if (isPlay && isCoverSpin) {
       startAnimation();
     }
-  }, [musicInfo.musicInfo?.id, isCoverSpin, startAnimation, stopAnimation]);
+  }, [musicInfo.musicInfo?.id, isCoverSpin, startAnimation, stopAnimation, spinValue]);
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],

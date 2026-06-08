@@ -1,5 +1,4 @@
 import TrackPlayer, { State as TPState, Event as TPEvent } from 'react-native-track-player'
-import { getMusicUrl, clearMusicUrl, getAllKeys, storageDataPrefix } from '@/utils/data'
 import { setMusicUrl } from '@/core/player/player'
 import playerState from '@/store/player/state'
 import { log } from '@/utils/log'
@@ -15,6 +14,7 @@ import { updateSetting } from '@/core/common'
 import settingState from '@/store/setting/state'
 import { onWidgetPlayPause, onWidgetPrev, onWidgetNext } from '@/utils/nativeModules/musicWidget'
 import { playerLog } from '@/utils/playerLog'
+import { getAllKeys, removeDataMultiple, storageDataPrefix } from '@/plugins/storage'
 
 let isInitialized = false
 
@@ -124,7 +124,7 @@ const registerPlaybackService = async () => {
         const cacheKeys = allKeys.filter(key => key.startsWith(prefix + musicId))
         if (cacheKeys.length > 0) {
           log.info('[Player] Found cached keys:', cacheKeys)
-          await clearMusicUrl(cacheKeys)
+          await removeDataMultiple(cacheKeys)
           log.info('[Player] Music URL cache cleared successfully')
         } else {
           log.info('[Player] No cached URL found for this music')

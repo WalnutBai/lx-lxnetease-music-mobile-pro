@@ -215,11 +215,12 @@ export default async (setting: LX.AppSetting) => {
     if (!global.lx.apiInitPromise[1]) global.lx.apiInitPromise[2](status)
   }
   const showUpdateAlert = ({ name, log, updateUrl }: UpdateInfoParams) => {
+    if (!name && !log) return
+    const message = `${global.i18n.t('user_api_update_alert', { name: name || '' })}\n${log || ''}`.trim()
+    if (!message) return
     if (updateUrl) {
       void confirmDialog({
-        message: `${global.i18n.t('user_api_update_alert', { name })}\n${log}`,
-        // selection: true,
-        // showCancel: true,
+        message,
         confirmButtonText: global.i18n.t('user_api_update_alert_open_url'),
         cancelButtonText: global.i18n.t('close'),
       }).then((confirm) => {
@@ -230,8 +231,7 @@ export default async (setting: LX.AppSetting) => {
       })
     } else {
       void tipDialog({
-        message: `${global.i18n.t('user_api_update_alert', { name })}\n${log}`,
-        // selection: true,
+        message,
         btnText: global.i18n.t('ok'),
       })
     }

@@ -9,6 +9,7 @@ import {
 } from '@/utils/fs'
 
 const logPath = temporaryDirectoryPath + '/error.log'
+const sourceTestLogPath = temporaryDirectoryPath + '/source_test.log'
 
 const logTools = {
   tempLog: [] as Array<{ time: string; type: 'LOG' | 'WARN' | 'ERROR'; text: string }> | null,
@@ -84,6 +85,28 @@ export const log = {
     }
   },
 }
+
+export const getSourceTestLogs = async () => {
+  return readFile(sourceTestLogPath)
+}
+
+export const clearSourceTestLogs = async () => {
+  return unlink(sourceTestLogPath).then(async () => writeFile(sourceTestLogPath, ''))
+}
+
+export const sourceTestLog = {
+  info(...msgs: any[]) {
+    const msg = msgs
+      .map((m) =>
+        typeof m == 'string' ? m : m instanceof Error ? (m.stack ?? m.message) : JSON.stringify(m)
+      )
+      .join(' ')
+    if (msg.startsWith('%c')) return
+    const time = new Date().toLocaleString()
+    void appendFile(sourceTestLogPath, `\n----lx source test log----\n${time} LOG ${msg}`)
+  },
+}
+
 /*
 if (process.env.NODE_ENV !== 'development') {
   const logPath = externalDirectoryPath + '/debug.log'

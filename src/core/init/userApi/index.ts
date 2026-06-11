@@ -13,6 +13,49 @@ import { fetchData } from './request'
 import { getUserApiList } from '@/utils/data'
 import { confirmDialog, openUrl, tipDialog } from '@/utils/tools'
 
+const parseFileSize = (sizeStr: string): number => {
+  const match = sizeStr.match(/^([\d.]+)\s*(MB|KB)$/i)
+  if (!match) return 0
+  const num = parseFloat(match[1])
+  const unit = match[2].toUpperCase()
+  return unit === 'KB' ? num / 1024 : num
+}
+
+const getActualQualityBySize = (actualSizeMB: number, claimedQuality: string, musicInfo: LX.Music.MusicInfo): string => {
+  const qualitySizes: Record<string, number> = {}
+  
+  if (musicInfo._types) {
+    for (const [quality, info] of Object.entries(musicInfo._types)) {
+      if (typeof info === 'object' && info.size) {
+        qualitySizes[quality] = parseFileSize(info.size)
+      }
+    }
+  }
+  
+  if (Object.keys(qualitySizes).length === 0 && musicInfo.meta?._qualitys) {
+    for (const [quality, info] of Object.entries(musicInfo.meta._qualitys)) {
+      if (typeof info === 'object' && info.size) {
+        qualitySizes[quality] = parseFileSize(info.size)
+      }
+    }
+  }
+  
+  if (Object.keys(qualitySizes).length === 0) return claimedQuality
+  
+  let closestQuality = claimedQuality
+  let minDiff = Infinity
+  
+  for (const [quality, expectedSize] of Object.entries(qualitySizes)) {
+    const diff = Math.abs(actualSizeMB - expectedSize)
+    if (diff < minDiff) {
+      minDiff = diff
+      closestQuality = quality
+    }
+  }
+  
+  return closestQuality
+}
+
 export default async (setting: LX.AppSetting) => {
   const userApiRequestMap = new Map<
     string,
@@ -124,9 +167,53 @@ export default async (setting: LX.AppSetting) => {
                         },
                       },
                     })
-                      .then((res) => {
-                        // console.log(res)
-                        return { type, url: res.data.url }
+                      .then(async (res) => {
+                        const extraQuality = res.data.extra?.quality
+                        let actualQuality = typeof extraQuality === 'object' 
+                          ? extraQuality.type || type 
+                          : (extraQuality || type)
+                        
+                        const url = res.data.url
+                        if (url) {
+                          const urlLower = url.toLowerCase()
+                          const urlExtension = urlLower.split('.').pop() || ''
+                          
+                          try {
+                            const headResponse = await fetch(url, { method: 'HEAD' })
+                            const contentLength = headResponse.headers.get('content-length')
+                            const contentType = headResponse.headers.get('content-type') || ''
+                            
+                            let inferredType = urlExtension
+                            if (contentType.includes('audio/flac') || contentType.includes('application/octet-stream')) {
+                              inferredType = 'flac'
+                            } else if (contentType.includes('audio/mpeg') || contentType.includes('audio/mp3')) {
+                              inferredType = 'mp3'
+                            } else if (contentType.includes('audio/mp4') || contentType.includes('audio/m4a') || contentType.includes('audio/aac')) {
+                              inferredType = 'm4a'
+                            }
+                            
+                            if (contentLength) {
+                              const actualSizeMB = parseInt(contentLength) / (1024 * 1024)
+                              actualQuality = getActualQualityBySize(actualSizeMB, actualQuality, songInfo)
+                            } else if (inferredType === 'm4a' || inferredType === 'aac') {
+                              actualQuality = '128k'
+                            } else if (inferredType === 'mp3') {
+                              actualQuality = '320k'
+                            } else {
+                              actualQuality = 'flac'
+                            }
+                          } catch {
+                            if (urlExtension === 'm4a' || urlExtension === 'aac') {
+                              actualQuality = '128k'
+                            } else if (urlExtension === 'mp3') {
+                              actualQuality = '320k'
+                            } else {
+                              actualQuality = 'flac'
+                            }
+                          }
+                        }
+                        
+                        return { type: actualQuality, url: res.data.url }
                       })
                       .catch((err) => {
                         console.log(err.message)

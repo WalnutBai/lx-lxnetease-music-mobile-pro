@@ -12,6 +12,7 @@ import { useSettingValue } from '@/store/setting/hook'
 import { useStatus, useUserApiList } from '@/store/userApi'
 import Button from '../../components/Button'
 import UserApiEditModal, { type UserApiEditModalType } from './UserApiEditModal'
+import SourceTest from './SourceTest'
 import Text from '@/components/common/Text'
 import { useTheme } from '@/store/theme/hook'
 import { Icon } from '@/components/common/Icon'
@@ -483,6 +484,7 @@ export default memo(() => {
       <View style={styles.btn}>
         <Button onPress={handleShow}>{t('setting_basic_source_user_api_btn')}</Button>
       </View>
+      <SourceTest />
       <UserApiEditModal ref={modalRef} />
     </SubTitle>
   )

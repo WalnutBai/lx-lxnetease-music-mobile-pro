@@ -182,9 +182,9 @@ export default memo(() => {
     }
   }, [keywords, isLoaded])
 
-  const handleKeywordChange = (sourceId: string, value: string) => {
+  const handleKeywordChange = useCallback((sourceId: string, value: string) => {
     setKeywords(prev => ({ ...prev, [sourceId]: value }))
-  }
+  }, [])
 
   // 保存设置
   useEffect(() => {
@@ -257,28 +257,28 @@ export default memo(() => {
   }
 
   // 处理间隔时间变化
-  const handleIntervalChange = (value: string) => {
+  const handleIntervalChange = useCallback((value: string) => {
     // 只允许数字
     const num = value.replace(/[^0-9]/g, '')
     setIntervalSeconds(num)
-  }
+  }, [])
 
   // 处理音质测试间隔时间变化
-  const handleQualityIntervalChange = (value: string) => {
+  const handleQualityIntervalChange = useCallback((value: string) => {
     // 只允许数字
     const num = value.replace(/[^0-9]/g, '')
     setQualityIntervalSeconds(num)
-  }
+  }, [])
 
   // 处理测试超时时间变化
-  const handleTestTimeoutChange = (value: string) => {
+  const handleTestTimeoutChange = useCallback((value: string) => {
     // 只允许数字
     const num = value.replace(/[^0-9]/g, '')
     setTestTimeoutSeconds(num)
-  }
+  }, [])
 
   // 处理大小误差变化（允许小数）
-  const handleSizeErrorChange = (value: string) => {
+  const handleSizeErrorChange = useCallback((value: string) => {
     // 只允许数字和小数点，且小数点只能有一个
     const num = value.replace(/[^\d.]/g, '')
     const parts = num.split('.')
@@ -287,7 +287,7 @@ export default memo(() => {
     } else {
       setSizeErrorMB(num)
     }
-  }
+  }, [])
 
   // 获取大小误差（MB）
   const getSizeErrorMB = (): number => {
@@ -985,11 +985,6 @@ export default memo(() => {
         >
           终止测试
         </Button>
-        {isTesting && (
-          <Text style={[styles.elapsedTimeText, { color: theme['c-font-label'] }]}>
-            总耗时: {elapsedTime}s
-          </Text>
-        )}
       </View>
 
       <View style={styles.settingsRow}>
@@ -1077,6 +1072,11 @@ export default memo(() => {
           <Text style={[styles.sectionTitle, { color: theme['c-font-label'] }]}>
             {t('setting_basic_source_test_result_title')}
           </Text>
+          {isTesting && (
+            <Text style={[styles.elapsedTimeText, { color: theme['c-font-label'] }]}>
+              总耗时: {elapsedTime}s
+            </Text>
+          )}
           <View style={styles.resultList}>
             {results.map((result) => (
               <View key={result.source} style={styles.resultItem}>

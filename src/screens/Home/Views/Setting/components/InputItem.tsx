@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useRef } from 'react'
+import { memo, useState, useEffect, useRef, useCallback } from 'react'
 
 import { StyleSheet, View, Keyboard } from 'react-native'
 import type { InputType, InputProps } from '@/components/common/Input'
@@ -18,24 +18,32 @@ export default memo(({ value, label, onChanged, ...props }: InputItemProps) => {
   const isMountRef = useRef(false)
   const inputRef = useRef<InputType>(null)
   const theme = useTheme()
-  const saveValue = () => {
-    onChanged?.(text, (value: string) => {
+
+  // 使用 useCallback 稳定 onChanged 引用
+  const stableOnChanged = useCallback((text: string, callback: (vlaue: string) => void) => {
+    onChanged?.(text, callback)
+  }, [onChanged])
+
+  const saveValue = useCallback(() => {
+    stableOnChanged(text, (value: string) => {
       if (!isMountRef.current) return
       const newValue = String(value)
       setText(newValue)
       textRef.current = newValue
     })
-  }
+  }, [text, stableOnChanged])
+
   useEffect(() => {
     isMountRef.current = true
     return () => {
       isMountRef.current = false
     }
   }, [])
+
   useEffect(() => {
     const handleKeyboardDidHide = () => {
       if (!inputRef.current?.isFocused()) return
-      onChanged?.(textRef.current, (value) => {
+      stableOnChanged(textRef.current, (value) => {
         if (!isMountRef.current) return
         const newValue = String(value)
         setText(newValue)
@@ -47,7 +55,8 @@ export default memo(({ value, label, onChanged, ...props }: InputItemProps) => {
     return () => {
       keyboardDidHide.remove()
     }
-  }, [onChanged])
+  }, [stableOnChanged])
+
   useEffect(() => {
     if (value != text) {
       const newValue = String(value)
@@ -55,10 +64,12 @@ export default memo(({ value, label, onChanged, ...props }: InputItemProps) => {
       textRef.current = newValue
     }
   }, [value])
-  const handleSetSelectMode = (text: string) => {
+
+  const handleSetSelectMode = useCallback((text: string) => {
     setText(text)
     textRef.current = text
-  }
+  }, [])
+
   return (
     <View style={styles.container}>
       <Text style={styles.label} size={14}>

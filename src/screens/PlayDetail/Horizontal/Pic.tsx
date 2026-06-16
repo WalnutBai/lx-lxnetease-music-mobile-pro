@@ -18,7 +18,8 @@ export default memo(({ componentId }: { componentId: string }) => {
   const statusBarHeight = useStatusbarHeight();
   const isPlay = useIsPlay();
   const isCoverSpin = useSettingValue('playDetail.isCoverSpin');
-  const coverSize = useSettingValue('playDetail.style.coverSize');
+  const coverSizeRaw = useSettingValue('playDetail.style.coverSize');
+  const coverSize = typeof coverSizeRaw === 'number' && !isNaN(coverSizeRaw) ? coverSizeRaw : 100;
   const spinValue = useRef(new Animated.Value(0)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isAnimating = useRef(false);
@@ -116,7 +117,7 @@ export default memo(({ componentId }: { componentId: string }) => {
   return (
     <View style={{ ...styles.container, height: contentHeight }}>
       <View style={[styles.content, imageContainerStyle, { overflow: 'hidden' }]}>
-        <Animated.View style={{ position: 'absolute', top: '-21%', left: '-21%', width: '142%', height: '142%', transform: [{ rotate: spin }] }}>
+        <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: imageContainerStyle.borderRadius, transform: [{ rotate: spin }] }}>
           <Image
             url={musicInfo.pic} // 直接使用 store 中的数据
             nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic}

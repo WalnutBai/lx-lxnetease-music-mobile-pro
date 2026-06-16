@@ -27,17 +27,18 @@ export const handleShowAlbumDetail = (componentId: string, musicInfo: LX.Music.M
   }
   const albumInfo = {
     id: albumId,
+    mid: (musicInfo.meta as any).albumMid || albumId,
     name: musicInfo.meta.albumName,
     author: musicInfo.singer,
     img: musicInfo.meta.picUrl,
-    source: 'wy', // 默认源为wy
+    source: musicInfo.source,
   }
   navigations.pushAlbumDetailScreen(componentId, albumInfo)
 }
 
 export const handleShowArtistDetail = async (componentId: string, musicInfo: LX.Music.MusicInfoOnline) => {
-  if (musicInfo.source !== 'wy') {
-    toast('非网易云音源无法查看歌手详情')
+  if (musicInfo.source !== 'wy' && musicInfo.source !== 'tx') {
+    toast('暂不支持该音源查看歌手详情')
     return
   }
 
@@ -48,7 +49,7 @@ export const handleShowArtistDetail = async (componentId: string, musicInfo: LX.
   }
 
   const onSelect = (artist: { id: string | number, name: string }) => {
-    navigations.pushArtistDetailScreen(componentId, { id: String(artist.id), name: artist.name })
+    navigations.pushArtistDetailScreen(componentId, { id: String(artist.id), name: artist.name, source: musicInfo.source })
   }
 
   if (artists.length > 1) {

@@ -5,10 +5,48 @@ import Text from '@/components/common/Text'
 import Button from '../../components/Button'
 import { useI18n } from '@/lang'
 import { useTheme } from '@/store/theme/hook'
+import { useSettingValue } from '@/store/setting/hook'
 import musicSdk from '@/utils/musicSdk'
 import { log, getSourceTestLogs, clearSourceTestLogs, sourceTestLog } from '@/utils/log'
 import { createStyle, toast } from '@/utils/tools'
 import LogConfirmAlert, { type LogConfirmAlertType } from '@/components/common/LogConfirmAlert'
+
+// 调整颜色透明度的辅助函数
+const adjustColorOpacity = (color: string, opacity: number) => {
+  const rgbaMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
+  if (rgbaMatch) {
+    const r = parseInt(rgbaMatch[1])
+    const g = parseInt(rgbaMatch[2])
+    const b = parseInt(rgbaMatch[3])
+    return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`
+  }
+  
+  const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1])
+    const g = parseInt(rgbMatch[2])
+    const b = parseInt(rgbMatch[3])
+    return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`
+  }
+  
+  const hexMatch = color.match(/#([0-9a-fA-F]{6})/)
+  if (hexMatch) {
+    const r = parseInt(hexMatch[1].slice(0, 2), 16)
+    const g = parseInt(hexMatch[1].slice(2, 4), 16)
+    const b = parseInt(hexMatch[1].slice(4, 6), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`
+  }
+  
+  const hexMatch3 = color.match(/#([0-9a-fA-F]{3})/)
+  if (hexMatch3) {
+    const r = parseInt(hexMatch3[1][0] + hexMatch3[1][0], 16)
+    const g = parseInt(hexMatch3[1][1] + hexMatch3[1][1], 16)
+    const b = parseInt(hexMatch3[1][2] + hexMatch3[1][2], 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`
+  }
+  
+  return color
+}
 
 // 注意：聆澜自定义源只支持以下3个音源
 const sources = [
@@ -134,6 +172,7 @@ const saveSettings = async (settings: TestSettings) => {
 export default memo(() => {
   const t = useI18n()
   const theme = useTheme()
+  const subContainerOpacity = useSettingValue('theme.subContainerOpacity')
   const [isTesting, setIsTesting] = useState(false)
   const [results, setResults] = useState<TestResult[]>([])
   const [currentProgress, setCurrentProgress] = useState('')
@@ -928,7 +967,7 @@ export default memo(() => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: `rgba(255, 255, 255, ${subContainerOpacity / 100})` }]}>
       <Text style={[styles.title, { color: theme['c-font'] }]}>
         {t('setting_basic_source_test_title')}
       </Text>
@@ -1137,7 +1176,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   title: {
     fontSize: 16,

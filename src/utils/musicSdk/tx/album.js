@@ -251,6 +251,7 @@ export default {
       list.push({
         id: String(songInfo.id),
         singer: formatSingerName(songInfo.singer, 'name'),
+        artists: songInfo.singer?.map(s => ({ id: s.id || s.mid, name: s.name })) || [],
         name: songInfo.title,
         albumName,
         albumId,

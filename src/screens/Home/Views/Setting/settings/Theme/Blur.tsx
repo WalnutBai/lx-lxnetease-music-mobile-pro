@@ -60,7 +60,7 @@ const styles = createStyle({
     flexGrow: 0,
     flexShrink: 1,
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     alignItems: 'center',
   },
 })

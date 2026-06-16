@@ -12,6 +12,7 @@ import Backup from '../settings/Backup'
 import Other from '../settings/Other'
 import Version from '../settings/Version'
 import About from '../settings/About'
+import Theme from '../settings/Theme'
 import { createStyle } from '@/utils/tools'
 import { SETTING_SCREENS, type SettingScreenIds } from '../Main'
 
@@ -51,6 +52,8 @@ const ListItem = memo(
         return <Version />
       case 'about':
         return <About />
+      case 'theme':
+        return <Theme />
       case 'basic':
         return <Basic />
     }

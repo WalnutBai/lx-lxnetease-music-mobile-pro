@@ -26,7 +26,7 @@ import OneDrive from '../Views/OneDrive'
 import WebDAV from '../Views/WebDAV'
 import TXPlaylist from '../Views/TxPlaylist'
 
-const hideKeys = ['list.isShowAlbumName', 'list.isShowInterval', 'theme.fontShadow'] as Readonly<
+const hideKeys = ['list.isShowAlbumName', 'list.isShowInterval'] as Readonly<
   Array<keyof LX.AppSetting>
 >
 

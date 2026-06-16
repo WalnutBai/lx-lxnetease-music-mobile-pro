@@ -21,7 +21,8 @@ export default memo(({ componentId }: { componentId: string }) => {
   const statusBarHeight = useStatusbarHeight();
   const isPlay = useIsPlay();
   const isCoverSpin = useSettingValue('playDetail.isCoverSpin');
-  const coverSize = useSettingValue('playDetail.style.coverSize');
+  const coverSizeRaw = useSettingValue('playDetail.style.coverSize');
+  const coverSize = typeof coverSizeRaw === 'number' && !isNaN(coverSizeRaw) ? coverSizeRaw : 100;
   const spinValue = useRef(new Animated.Value(0)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isAnimating = useRef(false);
@@ -122,13 +123,14 @@ export default memo(({ componentId }: { componentId: string }) => {
   // 对角线 = 边长 × √2 ≈ 边长 × 1.42，所以放大 1.42 倍可让旋转时始终覆盖容器
   const animatedCoverStyle = useMemo(() => ({
     position: 'absolute' as const,
-    top: '-21%',
-    left: '-21%',
-    width: '142%',
-    height: '142%',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backfaceVisibility: 'hidden' as const,
     transform: [{ rotate: spin }],
-  } as any), [spin]);
+    borderRadius: imageContainerStyle.borderRadius,
+  } as any), [spin, imageContainerStyle.borderRadius]);
 
   const menus = useMemo((): Menus => [
     { action: 'download_song', label: '下载歌曲' },

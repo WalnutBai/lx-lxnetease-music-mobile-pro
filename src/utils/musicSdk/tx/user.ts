@@ -83,7 +83,7 @@ export default {
       }
 
       if (body.code === 1000) {
-        throw new Error('未登录或登录已过期');
+        throw new Error('QQ音乐Cookie已过期，请重新获取');
       }
 
       txLog.info('获取用户信息成功');
@@ -145,6 +145,10 @@ export default {
       const { body } = await requestObj.promise;
 
       txLog.debug('自建歌单响应:', JSON.stringify(body).substring(0, 500));
+
+      if (body.code === 1000) {
+        throw new Error('QQ音乐Cookie已过期，请重新获取')
+      }
 
       // 检查是否有 diss_list
       let dissList = body.data?.diss_list || body.data?.disslist;
@@ -627,6 +631,10 @@ export default {
 
     if (statusCode !== 200) {
       throw new Error(`HTTP请求失败，状态码: ${statusCode}`)
+    }
+
+    if (body.code === 1000) {
+      throw new Error('QQ音乐Cookie已过期，请重新获取')
     }
 
     return body

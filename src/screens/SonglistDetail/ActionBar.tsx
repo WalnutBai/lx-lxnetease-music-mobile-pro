@@ -25,19 +25,24 @@ export default memo(({ onBack }: { onBack: () => void }) => { // 确保接收 on
     void handleCollect(info.id, info.source, songlistState.listDetailInfo.info.name || info.name)
   }
 
+  const showCollect = info.source !== 'tx'
+  const btnWidth = showCollect ? '33.33%' : '50%'
+
   return (
     <View style={styles.container}>
-      <Button onPress={handleCollection} style={styles.controlBtn}>
-        <Text style={{ ...styles.controlBtnText, color: theme['c-button-font'] }}>
-          {t('collect_songlist')}
-        </Text>
-      </Button>
-      <Button onPress={handlePlayAll} style={styles.controlBtn}>
+      {showCollect && (
+        <Button onPress={handleCollection} style={[styles.controlBtn, { width: btnWidth }]}>
+          <Text style={{ ...styles.controlBtnText, color: theme['c-button-font'] }}>
+            {t('collect_songlist')}
+          </Text>
+        </Button>
+      )}
+      <Button onPress={handlePlayAll} style={[styles.controlBtn, { width: btnWidth }]}>
         <Text style={{ ...styles.controlBtnText, color: theme['c-button-font'] }}>
           {t('play_all')}
         </Text>
       </Button>
-      <Button onPress={onBack} style={styles.controlBtn}>
+      <Button onPress={onBack} style={[styles.controlBtn, { width: btnWidth }]}>
         <Text style={{ ...styles.controlBtnText, color: theme['c-button-font'] }}>{t('back')}</Text>
       </Button>
     </View>

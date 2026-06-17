@@ -160,6 +160,10 @@ export default {
         throw new Error(`HTTP错误: ${statusCode}`)
       }
       
+      if (body.code === 1000) {
+        throw new Error('QQ音乐Cookie已过期，请重新获取')
+      }
+
       if (body.code !== 0) {
         throw new Error(`API错误: code=${body.code}`)
       }
@@ -258,6 +262,10 @@ export default {
         throw new Error(`HTTP错误: ${statusCode}`)
       }
       
+      if (body.code === 1000) {
+        throw new Error('QQ音乐Cookie已过期，请重新获取')
+      }
+
       if (body.code !== 0) {
         throw new Error(`API错误: code=${body.code}`)
       }
@@ -327,6 +335,10 @@ export default {
         throw new Error(`HTTP错误: ${statusCode}`)
       }
       
+      if (body.code === 1000) {
+        throw new Error('QQ音乐Cookie已过期，请重新获取')
+      }
+
       if (body.code !== 0) {
         throw new Error(`API错误: code=${body.code}`)
       }
@@ -402,6 +414,10 @@ export default {
         throw new Error(`HTTP错误: ${statusCode}`)
       }
       
+      if (body.code === 1000) {
+        throw new Error('QQ音乐Cookie已过期，请重新获取')
+      }
+
       if (body.code !== 0) {
         throw new Error(`API错误: code=${body.code}`)
       }
@@ -500,6 +516,10 @@ export default {
         throw new Error(`HTTP错误: ${statusCode}`)
       }
       
+      if (body.code === 1000) {
+        throw new Error('QQ音乐Cookie已过期，请重新获取')
+      }
+
       if (body.code !== 0) {
         throw new Error(`API错误: code=${body.code}`)
       }
@@ -580,6 +600,10 @@ export default {
         throw new Error(`HTTP错误: ${statusCode}`)
       }
       
+      if (body.code === 1000) {
+        throw new Error('QQ音乐Cookie已过期，请重新获取')
+      }
+
       if (body.code !== 0) {
         throw new Error(`API错误: code=${body.code}`)
       }

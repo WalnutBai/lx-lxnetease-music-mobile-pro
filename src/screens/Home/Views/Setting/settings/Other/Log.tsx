@@ -1,9 +1,10 @@
 import { memo, useRef, useState, useEffect } from 'react'
-import { View, Clipboard, Text as RNText } from 'react-native'
+import { View, Clipboard, Text as RNText, FlatList, Dimensions } from 'react-native'
 import { getLogs, clearLogs } from '@/utils/log'
 
 import SubTitle from '../../components/SubTitle'
 import Button from '../../components/Button'
+import InputItem from '../../components/InputItem'
 import { createStyle, toast } from '@/utils/tools'
 import LogConfirmAlert, { type LogConfirmAlertType } from '@/components/common/LogConfirmAlert'
 import CheckBoxItem from '../../components/CheckBoxItem'
@@ -14,10 +15,14 @@ import { updateSetting } from '@/core/common'
 import { searchLog } from '@/utils/searchLog'
 import { playerLog } from '@/utils/playerLog'
 
+const DEFAULT_MAX_LOG_LINES = 2000
+const LIST_MAX_HEIGHT = Dimensions.get('window').height * 0.5
+
 export default memo(() => {
   const t = useI18n()
   const alertRef = useRef<LogConfirmAlertType>(null)
-  const [logText, setLogText] = useState('')
+  const [logLines, setLogLines] = useState<string[]>([])
+  const [isTruncated, setIsTruncated] = useState(false)
   const isUnmountedRef = useRef(true)
   
   const [isEnableLog, setIsEnableLog] = useState(settingState.setting['common.isEnableLog'])
@@ -26,6 +31,7 @@ export default memo(() => {
   const [isEnableWebDAVLog, setIsEnableWebDAVLog] = useState(settingState.setting['common.isEnableWebDAVLog'])
   const [isEnableSearchLog, setIsEnableSearchLog] = useState(settingState.setting['common.isEnableSearchLog'])
   const [isEnablePlayerLog, setIsEnablePlayerLog] = useState(settingState.setting['common.isEnablePlayerLog'])
+  const [maxLogLines, setMaxLogLines] = useState(DEFAULT_MAX_LOG_LINES)
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -37,7 +43,7 @@ export default memo(() => {
   }
 
   const handleCopyAll = () => {
-    copyToClipboard(logText)
+    copyToClipboard(logLines.join('\n\n'))
   }
 
   const getErrorLog = () => {
@@ -45,17 +51,37 @@ export default memo(() => {
       if (isUnmountedRef.current) return
       const logArr = log.split(/^----lx log----\n|\n----lx log----\n|\n----lx log----$/)
       logArr.reverse()
-      const formattedLog = logArr
-        .filter(line => line.trim())
-        .join('\n\n')
-        .replace(/^\n+|\n+$/, '')
-      setLogText(formattedLog)
+      const filtered = logArr.filter(line => line.trim())
+      if (filtered.length > maxLogLines) {
+        setIsTruncated(true)
+        setLogLines(filtered.slice(0, maxLogLines))
+      } else {
+        setIsTruncated(false)
+        setLogLines(filtered)
+      }
     })
   }
+
+  const renderLogItem = ({ item }: { item: string }) => (
+    <RNText selectable={true} style={{ fontSize: 13, lineHeight: 18, paddingVertical: 4 }}>
+      {item}
+    </RNText>
+  )
 
   const openLogModal = () => {
     getErrorLog()
     alertRef.current?.setVisible(true)
+  }
+
+  const handleMaxLogLinesChange = (text: string, callback: (value: string) => void) => {
+    const num = parseInt(text, 10)
+    if (!isNaN(num) && num > 0) {
+      setMaxLogLines(num)
+      callback(String(num))
+    } else {
+      callback(String(DEFAULT_MAX_LOG_LINES))
+      setMaxLogLines(DEFAULT_MAX_LOG_LINES)
+    }
   }
 
   const handleCleanLog = () => {
@@ -147,6 +173,14 @@ export default memo(() => {
             disabled={!isEnableLog}
           />
         </View>
+        <View style={{ marginLeft: -25 }}>
+          <InputItem
+            label={t('setting_other_log_max_lines')}
+            value={String(maxLogLines)}
+            onChanged={handleMaxLogLinesChange}
+            keyboardType="number-pad"
+          />
+        </View>
         <View style={styles.btn}>
           <Button onPress={openLogModal}>{t('setting_other_log_btn_show')}</Button>
         </View>
@@ -156,20 +190,28 @@ export default memo(() => {
         cancelText={t('setting_other_log_btn_hide')}
         confirmText={t('setting_other_log_btn_clean')}
         onConfirm={handleCleanLog}
-        showConfirm={!!logText}
+        showConfirm={logLines.length > 0}
         reverseBtn={true}
         middleText={t('setting_other_log_btn_copy_all')}
         onMiddle={handleCopyAll}
-        showMiddle={!!logText}
+        showMiddle={logLines.length > 0}
       >
         <View style={styles.renameContent} onStartShouldSetResponder={() => true}>
-          {logText ? (
-            <RNText 
-              selectable={true} 
-              style={{ fontSize: 13, lineHeight: 18 }}
-            >
-              {logText}
-            </RNText>
+          {logLines.length > 0 ? (
+            <FlatList
+              data={logLines}
+              renderItem={renderLogItem}
+              keyExtractor={(_, index) => String(index)}
+              initialNumToRender={20}
+              maxToRenderPerBatch={30}
+              windowSize={10}
+              style={{ maxHeight: LIST_MAX_HEIGHT }}
+              ListHeaderComponent={isTruncated ? (
+                <Text style={{ color: 'orange', paddingVertical: 4 }} size={13}>
+                  {t('setting_other_log_tip_truncated', { num: maxLogLines })}
+                </Text>
+              ) : null}
+            />
           ) : (
             <Text size={13}>{t('setting_other_log_tip_null')}</Text>
           )}

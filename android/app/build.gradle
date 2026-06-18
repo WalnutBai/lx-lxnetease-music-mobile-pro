@@ -108,9 +108,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.xwalnut.music.mobile"
+    namespace "com.lxnetease.music.mobile"
     defaultConfig {
-        applicationId "com.xwalnut.music.mobile"
+        applicationId "com.lxnetease.music.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode verCode
@@ -172,21 +172,14 @@ android {
     // applicationVariants are e.g. debug, release
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
-            // For each separate APK per architecture, set a unique version code as described here:
-            // https://developer.android.com/studio/build/configure-apk-splits.html
-            // Example: versionCode 1 will generate 1001 for armeabi-v7a, 1002 for x86, etc.
-            def versionCodes = ["armeabi-v7a": 1, "x86": 2, "arm64-v8a": 3, "x86_64": 4]
             def abi = output.getFilter(OutputFile.ABI)
-            if (abi == null) {  // null for the universal-debug, universal-release variants
+            if (abi == null) {
                 output.outputFileName =
                         "${applicationName}-v${defaultConfig.versionName}-universal.apk"
             } else {
-                output.versionCodeOverride =
-                        defaultConfig.versionCode * 1000 + versionCodes.get(abi)
                 output.outputFileName =
                         "${applicationName}-v${defaultConfig.versionName}-${abi}.apk"
             }
-
         }
     }
 }

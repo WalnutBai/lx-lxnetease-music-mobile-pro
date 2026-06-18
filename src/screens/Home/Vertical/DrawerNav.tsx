@@ -172,7 +172,7 @@ const Header = () => {
       <View style={styles.header}>
         <Icon name="logo" color={theme['c-primary-dark-100-alpha-300']} size={28} />
         <Text style={styles.headerText} size={28} color={theme['c-primary-dark-100-alpha-300']}>
-          LX-X Music
+          LX-N Music
         </Text>
       </View>
     </View>

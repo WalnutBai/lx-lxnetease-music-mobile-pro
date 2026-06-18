@@ -71,7 +71,7 @@ const Header = () => {
     <View style={{ paddingTop: statusBarHeight }}>
       <View style={styles.header}>
         <Icon name="logo" color={theme['c-primary-dark-100-alpha-300']} size={22} />
-        {/* <Text style={styles.headerText} size={16} color={theme['c-primary-dark-100-alpha-300']}>LX-X Music</Text> */}
+        {/* <Text style={styles.headerText} size={16} color={theme['c-primary-dark-100-alpha-300']}>LX-N Music</Text> */}
       </View>
     </View>
   )

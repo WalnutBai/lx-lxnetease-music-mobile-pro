@@ -1,23 +1,60 @@
 <p align="center"><a href="https://github.com/lyswhut/lx-music-mobile"><img width="200" src="https://github.com/lyswhut/lx-music-mobile/blob/master/doc/images/icon.png" alt="lx-music logo"></a></p>
 
-<h1 align="center">LX-X Music 移动版</h1>
+<h1 align="center">LX-N Music 移动版</h1>
 
 <p align="center">
-  <a href="https://github.com/WalnutBai/lx-xwalnut-music-mobile/releases"><img src="https://img.shields.io/github/release/WalnutBai/lx-xwalnut-music-mobile" alt="Release version"></a>
-  <a href="https://github.com/WalnutBai/lx-xwalnut-music-mobile/actions/workflows/release.yml"><img src="https://github.com/WalnutBai/lx-xwalnut-music-mobile/workflows/Build/badge.svg" alt="Build status"></a>
-  <a href="https://github.com/facebook/react-native"><img src="https://img.shields.io/github/package-json/dependency-version/WalnutBai/lx-xwalnut-music-mobile/react-native/master" alt="React native version"></a>
+  <a href="https://github.com/WalnutBai/lx-lxnetease-music-mobile-pro/releases"><img src="https://img.shields.io/github/release/WalnutBai/lx-lxnetease-music-mobile-pro" alt="Release version"></a>
+  <a href="https://github.com/WalnutBai/lx-lxnetease-music-mobile-pro/actions/workflows/release.yml"><img src="https://github.com/WalnutBai/lx-lxnetease-music-mobile-pro/workflows/Build/badge.svg" alt="Build status"></a>
+  <a href="https://github.com/facebook/react-native"><img src="https://img.shields.io/github/package-json/dependency-version/WalnutBai/lx-lxnetease-music-mobile-pro/react-native/master" alt="React native version"></a>
 </p>
 
 <p align="center">一个基于 React Native 开发的音乐软件</p>
 
-> **注**: 这是在三方修改版 `lx-xwalnut-music-mobile` 基础上继续改造，仅供个人自用
+> **注**: 这是在三方修改版 `lx-lxnetease-music-mobile` 基础上继续改造，仅供个人自用
 > 
-> 官方地址: [lx-xwalnut-music-mobile](https://github.com/WalnutBai/lx-xwalnut-music-mobile)
+> 官方地址: [lx-lxnetease-music-mobile-pro](https://github.com/WalnutBai/lx-lxnetease-music-mobile-pro)
 
 > **注意**: 涉及同步、备份未充分测试，请自行备份重要文件
 
 ---
 ## 最新发行版本更新日志：
+
+## 26.06.10
+
+### 新增
+
+1. 新增QQ音乐Cookie登录、每日推荐、歌单同步功能
+2. 新增歌曲详情页、歌手/专辑快捷跳转入口、QQ收藏功能
+3. 新增迷你歌词功能，支持歌词对齐、封面尺寸自定义调节
+4. 新增QQ相似歌曲推荐功能
+5. 新增QQ网页登录获取Cookie能力
+6. 新增QQ专辑搜索、歌手搜索接口
+7. 新增QQ音源MV播放功能
+8. 新增日志阈值配置，完善QQ歌单展示逻辑
+9. 支持我的歌单自定义改名
+
+### 优化
+
+1. 修改默认侧边栏配置
+2. 重构下载逻辑
+3. 优化QQ歌手、专辑详情页面，调整界面展示效果
+4. 重构设置界面布局，调整默认排序、默认启用功能
+5. 优化QQ歌单、我的列表界面尺寸
+6. 全新改版个人列表页面
+
+### 移除
+
+1. 移除QQ详情页部分无法实现的功能模块
+
+### 修复
+
+1. 修复展开QQ歌单闪屏问题
+2. 修复QQ歌手、专辑详情多项功能缺陷及各类细小bug
+3. 修复主题设置异常
+4. 修复专辑歌单数量展示错误
+5. 修复列表状态记忆失效Bug
+6. 修复排序逻辑导致界面布局错乱问题
+7. 修复哔哩哔哩分P结果展示异常、Cookie登录报错问题
 
 ## 26.06.8
 

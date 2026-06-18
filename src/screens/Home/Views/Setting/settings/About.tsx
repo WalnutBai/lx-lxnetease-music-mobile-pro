@@ -12,7 +12,7 @@ export default memo(() => {
   const theme = useTheme()
   const t = useI18n()
   const openHomePage = () => {
-    void openUrl('https://github.com/WalnutBai/lx-xwalnut-music-mobile#readme')
+    void openUrl('https://github.com/WalnutBai/lx-lxnetease-music-mobile-pro#readme')
   }
 
   const textLinkStyle = {
@@ -24,9 +24,9 @@ export default memo(() => {
   return (
     <Section title={t('setting_about')} sectionId="setting_about">
       <View style={styles.part}>
-        <Text style={styles.text}>本软件(LX-X Music)完全免费，代码已开源。开源地址：</Text>
+        <Text style={styles.text}>本软件(LX-N Music)完全免费，代码已开源。开源地址：</Text>
         <TouchableOpacity onPress={openHomePage}>
-          <Text style={textLinkStyle}>https://github.com/WalnutBai/lx-xwalnut-music-mobile</Text>
+          <Text style={textLinkStyle}>https://github.com/WalnutBai/lx-lxnetease-music-mobile-pro</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.part}>

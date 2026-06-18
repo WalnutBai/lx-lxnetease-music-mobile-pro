@@ -16,7 +16,7 @@ export default memo(() => {
   const downloadPath = useSettingValue('download.path')
   const fileSelectRef = useRef<FileSelectType>(null)
 
-  const defaultDownloadPath = RNFetchBlob.fs.dirs.MusicDir + '/LX-X Music'
+  const defaultDownloadPath = RNFetchBlob.fs.dirs.MusicDir + '/LX-N Music'
 
   const handleSelectPath = () => {
     fileSelectRef.current?.show(

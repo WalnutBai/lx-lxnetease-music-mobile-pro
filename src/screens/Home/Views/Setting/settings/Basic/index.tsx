@@ -27,6 +27,8 @@ import NavMenu from "@/screens/Home/Views/Setting/settings/Basic/NavMenu.tsx";
 import Theme from "../Theme/Theme";
 import IsAutoTheme from "../Theme/IsAutoTheme";
 import IsDynamicBg from "../Theme/IsDynamicBg";
+import IsSidebarDynamicBg from "../Theme/IsSidebarDynamicBg";
+import IsMylistDynamicBg from "../Theme/IsMylistDynamicBg";
 import IsFontShadow from "../Theme/IsFontShadow";
 import Blur from "../Theme/Blur";
 import CustomBg from "../Theme/CustomBg";
@@ -65,6 +67,8 @@ export default memo(() => {
         <Theme />
         <IsAutoTheme />
         <IsDynamicBg />
+        <IsSidebarDynamicBg />
+        <IsMylistDynamicBg />
         <CustomBg />
         <PicOpacity />
         <Blur />

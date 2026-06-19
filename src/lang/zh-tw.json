@@ -342,6 +342,8 @@
   "setting_basic_theme": "主題顏色",
   "setting_basic_theme_auto_theme": "跟隨系統亮、暗模式切換主題",
   "setting_basic_theme_dynamic_bg": "使用動態背景",
+  "setting_basic_theme_sidebar_dynamic_bg": "側邊欄跟隨動態背景",
+  "setting_basic_theme_mylist_dynamic_bg": "我的列表UI動態背景",
   "setting_basic_theme_font_shadow": "啟用字體陰影",
   "setting_basic_theme_hide_bg_dark": "隱藏黑色主題背景",
   "setting_basic_theme_more_btn_show": "更多主題",

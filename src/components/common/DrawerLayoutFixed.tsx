@@ -31,6 +31,7 @@ const DrawerLayoutFixed = forwardRef<DrawerLayoutFixedType, Props>(
 
     const bgPic = useBgPic()
     const dynamicBg = useSettingValue('theme.dynamicBg')
+    const sidebarDynamicBg = useSettingValue('theme.sidebarDynamicBg')
 
     const fixDrawerWidth = useCallback(() => {
       if (!changedRef.current.width) return
@@ -42,7 +43,7 @@ const DrawerLayoutFixed = forwardRef<DrawerLayoutFixedType, Props>(
     useEffect(() => {
       // 当背景图片或动态背景设置改变时，重新渲染以修复原生 DrawerLayoutAndroid 背景丢失/黑屏的问题
       fixDrawerWidth()
-    }, [bgPic, dynamicBg, fixDrawerWidth])
+    }, [bgPic, dynamicBg, sidebarDynamicBg, fixDrawerWidth])
 
     // 修复 DrawerLayoutAndroid 在导航到其他屏幕再返回后无法打开的问题
     usePageVisible(

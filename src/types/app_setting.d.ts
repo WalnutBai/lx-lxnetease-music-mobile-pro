@@ -143,6 +143,16 @@ declare global {
       'theme.fontShadow': boolean
 
       /**
+       * 侧边栏动态背景
+       */
+      'theme.sidebarDynamicBg': boolean
+
+      /**
+       * 我的列表UI动态背景
+       */
+      'theme.mylistDynamicBg': boolean
+
+      /**
        * 启动时自动播放歌曲
        */
       'player.startupAutoPlay': boolean

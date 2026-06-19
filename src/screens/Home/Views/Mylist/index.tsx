@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { View } from 'react-native'
 import settingState from '@/store/setting/state'
 import MusicList from './MusicList'
 import MyList from './MyList'
@@ -11,6 +12,9 @@ import { COMPONENT_IDS } from '@/config/constant'
 import { scaleSizeW } from '@/utils/pixelRatio'
 import type { InitState as CommonState } from '@/store/common/state'
 import { useSettingValue } from '@/store/setting/hook'
+import { useBgPic } from '@/store/common/hook'
+import ImageBackground from '@/components/common/ImageBackground'
+import { defaultHeaders } from '@/components/common/Image'
 
 const MAX_WIDTH = scaleSizeW(400)
 
@@ -18,6 +22,15 @@ export default () => {
   const drawer = useRef<DrawerLayoutFixedType>(null)
   const theme = useTheme()
   const isNewListUI = useSettingValue('list.isNewListUI')
+  const isDynamicBg = useSettingValue('theme.dynamicBg')
+  const isMylistDynamicBg = useSettingValue('theme.mylistDynamicBg')
+  const dynamicPic = useBgPic()
+  const customBgPicPath = useSettingValue('theme.customBgPicPath')
+  const pic = customBgPicPath || dynamicPic
+  const blur = useSettingValue('theme.blur')
+  const picOpacity = useSettingValue('theme.picOpacity')
+
+  const showMylistBg = isDynamicBg && isMylistDynamicBg && pic
   // const [width, setWidth] = useState(0)
 
   useEffect(() => {
@@ -54,7 +67,35 @@ export default () => {
     }
   }, [])
 
-  const navigationView = () => <MyList />
+  const drawerBgColor = showMylistBg ? 'transparent' : theme['c-content-background']
+
+  const navigationView = () => (
+    <View style={{ flex: 1, backgroundColor: drawerBgColor }}>
+      {showMylistBg ? (
+        <ImageBackground
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            right: 0,
+          }}
+          source={{ uri: pic, headers: defaultHeaders }}
+          resizeMode="cover"
+          blurRadius={blur}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: theme['c-content-background'],
+              opacity: picOpacity / 100,
+            }}
+          />
+        </ImageBackground>
+      ) : null}
+      <MyList />
+    </View>
+  )
   // console.log('render drawer content')
 
   if (isNewListUI) {
@@ -70,7 +111,7 @@ export default () => {
       widthPercentageMax={MAX_WIDTH}
       drawerPosition={settingState.setting['common.drawerLayoutPosition']}
       renderNavigationView={navigationView}
-      drawerBackgroundColor={theme['c-content-background']}
+      drawerBackgroundColor={drawerBgColor}
       style={{ elevation: 1 }}
     >
       <MusicList />

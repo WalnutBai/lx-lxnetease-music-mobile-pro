@@ -172,6 +172,8 @@ const defaultSetting: LX.AppSetting = {
   'theme.dynamicBg': true,
   'theme.blur': 18,
   'theme.fontShadow': false,
+  'theme.sidebarDynamicBg': false,
+  'theme.mylistDynamicBg': false,
   'theme.customBgPicPath': '',
   'theme.picOpacity': 76,
   'theme.sectionOpacity': 50,

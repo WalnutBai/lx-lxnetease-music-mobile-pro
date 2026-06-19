@@ -1,4 +1,4 @@
-import {memo, useCallback, useMemo, useRef} from 'react'
+import {memo, useCallback, useEffect, useMemo, useRef} from 'react'
 import { PanResponder, View, TouchableOpacity } from 'react-native'
 import { useKeyboard } from '@/utils/hooks'
 import Pic from './components/Pic'
@@ -47,6 +47,13 @@ export default memo(({ componentId, isHome = false }: { isHome?: boolean }) => {
   const handleShowPlaylist = () => {
     playlistRef.current?.show()
   }
+
+  useEffect(() => {
+    global.app_event.on('showPlaylist', handleShowPlaylist)
+    return () => {
+      global.app_event.off('showPlaylist', handleShowPlaylist)
+    }
+  }, [])
 
   const gestureAction = useRef<'drawer' | 'playlist' | null>(null)
   const panResponder = useRef(

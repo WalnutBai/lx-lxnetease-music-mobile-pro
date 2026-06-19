@@ -265,6 +265,11 @@ declare global {
       'playDetail.isCoverSpin': boolean
 
       /**
+       * 播放详情页-新UI样式
+       */
+      'playDetail.style.newUI': boolean
+
+      /**
        * 播放详情页-封面大小
        */
       'playDetail.style.coverSize': number

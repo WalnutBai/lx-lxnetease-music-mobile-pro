@@ -1,11 +1,12 @@
-import { memo, useRef, useCallback, useMemo } from 'react'
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
+import { memo, useRef, useCallback, useMemo, useEffect } from 'react'
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native'
 import { Icon } from '@/components/common/Icon'
 import { pop, navigations } from '@/navigation'
 import { useTheme } from '@/store/theme/hook'
 import { usePlayMusicInfo } from '@/store/player/hook'
+import playerState from '@/store/player/state'
 import Text from '@/components/common/Text'
-import { scaleSizeH } from '@/utils/pixelRatio'
+import { scaleSizeH, scaleSizeW } from '@/utils/pixelRatio'
 import { HEADER_HEIGHT as _HEADER_HEIGHT, NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import commonState from '@/store/common/state'
 import SettingPopup, { type SettingPopupType } from '../../components/SettingPopup'
@@ -14,6 +15,7 @@ import Btn from './Btn'
 import TimeoutExitBtn from './TimeoutExitBtn'
 import Marquee from './Marquee'
 import StatusBar from '@/components/common/StatusBar'
+import { handleShare } from '@/screens/Home/Views/Mylist/MusicList/listAction'
 
 export const HEADER_HEIGHT = scaleSizeH(_HEADER_HEIGHT)
 
@@ -28,33 +30,23 @@ const Title = () => {
   }, [musicInfo])
 
   const handleAlbumPress = useCallback(() => {
-    if (!musicInfo) return
-    // 专辑详情仅网易云与QQ音乐支持
-    if (musicInfo.source !== 'wy' && musicInfo.source !== 'tx') return
-    const albumId = (musicInfo.meta as any)?.albumId || musicInfo.albumId
-    const albumName = musicInfo.meta?.albumName || musicInfo.albumName
-    const albumMid = (musicInfo.meta as any)?.albumMid || musicInfo.albumMid || albumId
-    if (!albumId || !albumName) return
-    if (musicInfo.source === 'wy') {
-      navigations.pushAlbumDetailScreen(commonState.componentIds[commonState.componentIds.length - 1]?.id!, { id: String(albumId), name: albumName, source: musicInfo.source })
-    } else if (musicInfo.source === 'tx') {
-      navigations.pushAlbumDetailScreen(commonState.componentIds[commonState.componentIds.length - 1]?.id!, { id: String(albumId), mid: albumMid, name: albumName, source: 'tx' })
-    }
+    if (!musicInfo || musicInfo.source !== 'wy' || !(musicInfo.meta as any).albumId) return
+    navigations.pushAlbumDetailScreen(commonState.componentIds[commonState.componentIds.length - 1]?.id!, { id: String((musicInfo.meta as any).albumId), name: musicInfo.meta.albumName, source: musicInfo.source })
   }, [musicInfo])
 
   const singerRender = useMemo(() => {
     if (!musicInfo) return null
-    const albumName = musicInfo.meta?.albumName || musicInfo.albumName
-    const albumId = (musicInfo.meta as any)?.albumId || musicInfo.albumId
+    const albumName = musicInfo.meta?.albumName
+    const albumId = (musicInfo.meta as any)?.albumId
 
-    if (!musicInfo.artists?.length || musicInfo.source == 'local' || musicInfo.source === 'tx') {
+    if (!musicInfo.artists?.length || musicInfo.source == 'local') {
       return (
         <View style={styles.singerContainer}>
           <Text numberOfLines={1} size={12} color={theme['c-font']}>
             {musicInfo.singer}
           </Text>
           {albumName ? (
-            <TouchableOpacity style={{ flexShrink: 1 }} onPress={handleAlbumPress} disabled={(musicInfo.source !== 'wy' && musicInfo.source !== 'tx') || !albumId}>
+            <TouchableOpacity style={{ flexShrink: 1 }} onPress={handleAlbumPress} disabled={musicInfo.source !== 'wy' || !albumId}>
               <Text numberOfLines={1} size={12} color={theme['c-font']}>
                 {` · ${albumName}`}
               </Text>
@@ -100,58 +92,139 @@ const Title = () => {
   )
 }
 
+const AnimatedIndicatorDot = ({ isActive }: { isActive: boolean }) => {
+  const animatedWidth = useRef(new Animated.Value(isActive ? 16 : 6)).current
+  const animatedOpacity = useRef(new Animated.Value(isActive ? 1 : 0.5)).current
 
-export default memo(() => {
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(animatedWidth, {
+        toValue: isActive ? 16 : 6,
+        useNativeDriver: false,
+        tension: 50,
+        friction: 7,
+      }),
+      Animated.spring(animatedOpacity, {
+        toValue: isActive ? 1 : 0.5,
+        useNativeDriver: false,
+        tension: 50,
+        friction: 7,
+      }),
+    ]).start()
+  }, [isActive])
+
+  return (
+    <Animated.View
+      style={{
+        width: animatedWidth,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#000',
+        opacity: animatedOpacity,
+      }}
+    />
+  )
+}
+
+export default memo(({ isNewUI, pageIndex }: { isNewUI: boolean; pageIndex?: number }) => {
   const popupRef = useRef<SettingPopupType>(null)
   const statusBarHeight = useStatusbarHeight()
+  const theme = useTheme()
   const back = () => {
     void pop(commonState.componentIds[commonState.componentIds.length - 1]?.id!)
   }
   const showSetting = () => {
     popupRef.current?.show()
   }
+  const iconColor = theme.isDark ? theme['c-font'] : theme['c-primary']
+  const activeIndex = pageIndex ?? 0
+
+  const handleShare = useCallback(() => {
+    const info = playerState.playMusicInfo.musicInfo
+    if (!info) return
+    const musicInfo = 'progress' in info ? info.metadata.musicInfo : info
+    handleShare(musicInfo)
+  }, [])
+
   return (
     <View
       style={{ height: HEADER_HEIGHT + statusBarHeight, paddingTop: statusBarHeight }}
       nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_header}
     >
       <StatusBar />
-      <View style={styles.container}>
-        <Btn icon="chevron-left" onPress={back} />
-        <Title />
-        <TimeoutExitBtn />
-        <Btn icon="slider" onPress={showSetting} />
-      </View>
+      {isNewUI ? (
+        <View style={styles.containerNew}>
+          <View style={styles.leftArea}>
+            <Icon name="chevron-left" color={iconColor} size={24} onPress={back} />
+          </View>
+          <View style={styles.centerArea}>
+            <View style={styles.pageIndicator}>
+              <AnimatedIndicatorDot isActive={activeIndex === 0} />
+              <AnimatedIndicatorDot isActive={activeIndex === 1} />
+            </View>
+          </View>
+          <View style={styles.rightArea}>
+            <Icon name="music_time" color={iconColor} size={22} />
+            <Icon name="slider" color={iconColor} size={22} onPress={showSetting} />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.containerOld}>
+          <Btn icon="chevron-left" onPress={back} />
+          <Title />
+          <TimeoutExitBtn />
+          <Btn icon="slider" onPress={showSetting} />
+        </View>
+      )}
       <SettingPopup ref={popupRef} direction="vertical" />
     </View>
   )
 })
 
 const styles = StyleSheet.create({
-  container: {
+  containerOld: {
     flexDirection: 'row',
-    // justifyContent: 'center',
     height: '100%',
+  },
+  containerNew: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: '100%',
+    paddingHorizontal: 10,
+  },
+  leftArea: {
+    width: scaleSizeW(60),
+    alignItems: 'flex-start',
+  },
+  centerArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rightArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+    width: scaleSizeW(60),
+    justifyContent: 'flex-end',
   },
   titleContent: {
     flex: 1,
     paddingHorizontal: 5,
-    // alignItems: 'center',
     justifyContent: 'center',
   },
-  title: {
-    // flex: 1,
-    // textAlign: 'center',
-  },
-  icon: {
-    paddingLeft: 4,
-    paddingRight: 4,
-  },
+  title: {},
   singerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   singerText: {
     paddingRight: 2,
+  },
+  pageIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 })

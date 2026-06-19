@@ -329,6 +329,14 @@ export class AppEvent extends Event {
   jumpOneDrivePosition() {
     this.emit('jumpOneDrivePosition')
   }
+
+  showPlaylist() {
+    this.emit('showPlaylist')
+  }
+
+  switchToLyricPage() {
+    this.emit('switchToLyricPage')
+  }
 }
 
 type EventMethods = Omit<EventType, keyof Event>

@@ -179,6 +179,19 @@ const CollapseIcon = ({ size, color }: { size: number; color: string }) => (
   </Svg>
 )
 
+/**
+ * 歌词图标 - 用于桌面歌词开关
+ * 基于 SVG 歌词图标
+ */
+const LyricIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 1024 1024" fill="none">
+    <Path
+      d="M471.26 634.21h122.21v-122.21h-122.21v122.21z M450.89 471.26h162.94a20.37 20.37 0 0 1 20.37 20.37v162.94a20.37 20.37 0 0 1-20.37 20.37h-162.94a20.37 20.37 0 0 1-20.37-20.37v-162.94a20.37 20.37 0 0 1 20.37-20.37zM297.32 299.74a20.37 20.37 0 1 1 30.76-26.7l48.64 56.01a20.37 20.37 0 0 1-30.76 26.72L297.32 299.75zM330 430.83H273.69a20.37 20.37 0 1 1 0-40.74h76.58a20.37 20.37 0 0 1 20.37 20.37v267.76l6.54-8.64a20.37 20.37 0 0 1 32.49 24.59l-43.14 57.03c-11.79 15.56-36.6 7.23-36.6-12.3V430.83zM717.52 308.58H430.53a20.37 20.37 0 0 1 0-40.73h307a20.37 20.37 0 0 1 20.37 20.37v427.46h-90.74a20.37 20.37 0 1 1 0-40.74h70.37V308.58zM450.89 412.05h163.84a20.37 20.37 0 1 1 0 40.74H450.89a20.37 20.37 0 0 1 0-40.74z"
+      fill={color}
+    />
+  </Svg>
+)
+
 export const SvgIcon = memo(({ name, size = 15, rawSize, color = '#000', style }: SvgIconProps) => {
   const finalSize = rawSize ?? scaleSizeW(size)
 
@@ -206,6 +219,8 @@ export const SvgIcon = memo(({ name, size = 15, rawSize, color = '#000', style }
         return <ExpandIcon size={finalSize} color={color} />
       case 'collapse':
         return <CollapseIcon size={finalSize} color={color} />
+      case 'lyric':
+        return <LyricIcon size={finalSize} color={color} />
       default:
         return null
     }

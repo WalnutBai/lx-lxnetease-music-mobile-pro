@@ -23,6 +23,7 @@ export default memo(({ componentId }: { componentId: string }) => {
   const isCoverSpin = useSettingValue('playDetail.isCoverSpin');
   const coverSizeRaw = useSettingValue('playDetail.style.coverSize');
   const coverSize = typeof coverSizeRaw === 'number' && !isNaN(coverSizeRaw) ? coverSizeRaw : 100;
+  const isNewUI = useSettingValue('playDetail.style.newUI');
   const spinValue = useRef(new Animated.Value(0)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isAnimating = useRef(false);
@@ -70,7 +71,6 @@ export default memo(({ componentId }: { componentId: string }) => {
       startAnimation();
     } else {
       stopAnimation();
-      // 关闭旋转时立即重置角度
       if (!isCoverSpin) {
         spinValue.setValue(0);
       }
@@ -79,7 +79,6 @@ export default memo(({ componentId }: { componentId: string }) => {
 
   useEffect(() => {
     stopAnimation();
-    // 切歌时重置角度
     spinValue.setValue(0);
     if (isPlay && isCoverSpin) {
       startAnimation();
@@ -99,7 +98,9 @@ export default memo(({ componentId }: { componentId: string }) => {
   });
 
   const imageContainerStyle = useMemo(() => {
-    const baseWidth = Math.min(winWidth * 0.85, (winHeight - statusBarHeight - HEADER_HEIGHT) * 0.5);
+    const baseWidth = isNewUI 
+      ? Math.min(winWidth * 0.75, (winHeight - statusBarHeight - HEADER_HEIGHT) * 0.45)
+      : Math.min(winWidth * 0.85, (winHeight - statusBarHeight - HEADER_HEIGHT) * 0.5);
     const imgWidth = baseWidth * (coverSize / 100);
     const radius = isCoverSpin ? imgWidth / 2 : 4;
     return {
@@ -111,7 +112,7 @@ export default memo(({ componentId }: { componentId: string }) => {
       backgroundColor: 'transparent',
       overflow: 'hidden',
     };
-  }, [statusBarHeight, winHeight, winWidth, isCoverSpin, coverSize]);
+  }, [statusBarHeight, winHeight, winWidth, isCoverSpin, coverSize, isNewUI]);
 
   const imageStyle = useMemo(() => ({
     width: '100%',
@@ -119,8 +120,6 @@ export default memo(({ componentId }: { componentId: string }) => {
     borderRadius: imageContainerStyle.borderRadius,
   } as any), [imageContainerStyle.borderRadius]);
 
-  // 旋转时让 Animated.View 尺寸大于容器，避免旋转后变成菱形超出边界
-  // 对角线 = 边长 × √2 ≈ 边长 × 1.42，所以放大 1.42 倍可让旋转时始终覆盖容器
   const animatedCoverStyle = useMemo(() => ({
     position: 'absolute' as const,
     top: 0,
@@ -198,7 +197,7 @@ export default memo(({ componentId }: { componentId: string }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isNewUI ? styles.containerNew : {}]}>
       <TouchableWithoutFeedback onLongPress={handleLongPress}>
         <View
           ref={coverRef}
@@ -232,6 +231,12 @@ const styles = createStyle({
     justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: '3%',
+  },
+  containerNew: {
+    flexGrow: 0,
+    flexShrink: 0,
+    marginTop: 30,
+    paddingBottom: 5,
   },
   content: {
     backgroundColor: 'rgba(0,0,0,0)',

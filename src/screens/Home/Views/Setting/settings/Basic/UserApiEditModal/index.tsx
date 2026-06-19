@@ -7,7 +7,7 @@ import { useI18n } from '@/lang'
 import Dialog, { type DialogType } from '@/components/common/Dialog'
 import Button from '@/components/common/Button'
 import List from './List'
-import ScriptImportExport, { type ScriptImportExportType } from './ScriptImportExport'
+import ImportBtn from './ImportBtn'
 
 // interface UrlInputType {
 //   setText: (text: string) => void
@@ -62,7 +62,6 @@ export interface UserApiEditModalType {
 
 export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
   const dialogRef = useRef<DialogType>(null)
-  const scriptImportExportRef = useRef<ScriptImportExportType>(null)
   const [visible, setVisible] = useState(false)
   const theme = useTheme()
   const t = useI18n()
@@ -86,10 +85,6 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
     dialogRef.current?.setVisible(false)
   }
 
-  const handleExport = useCallback((apiId: string) => {
-    scriptImportExportRef.current?.export(apiId)
-  }, [])
-
   const openFAQPage = () => {
     void openUrl('https://lyswhut.github.io/lx-music-doc/mobile/custom-source')
   }
@@ -100,7 +95,7 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
         <Text size={16} style={styles.title}>
           {t('user_api_title')}
         </Text>
-        <List onExport={handleExport} />
+        <List onExport={() => {}} />
         <View style={styles.tips}>
           <Text style={styles.tipsText} size={12}>
             {t('user_api_readme')}
@@ -130,16 +125,8 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
             {t('close')}
           </Text>
         </Button>
-        <Button
-          style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }}
-          onPress={() => scriptImportExportRef.current?.import()}
-        >
-          <Text size={14} color={theme['c-button-font']}>
-            {t('user_api_btn_import')}
-          </Text>
-        </Button>
+        <ImportBtn btnStyle={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} />
       </View>
-      <ScriptImportExport ref={scriptImportExportRef} />
     </Dialog>
   ) : null
 })

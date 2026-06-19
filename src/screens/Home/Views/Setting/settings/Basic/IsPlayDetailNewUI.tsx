@@ -9,17 +9,17 @@ import CheckBoxItem from '../../components/CheckBoxItem'
 
 export default memo(() => {
   const t = useI18n()
-  const isNewListUI = useSettingValue('list.isNewListUI')
-  const setNewListUI = (isNewListUI: boolean) => {
-    updateSetting({ 'list.isNewListUI': isNewListUI })
+  const isNewUI = useSettingValue('playDetail.style.newUI')
+  const setNewUI = (isNewUI: boolean) => {
+    updateSetting({ 'playDetail.style.newUI': isNewUI })
   }
 
   return (
     <View style={styles.content}>
       <CheckBoxItem
-        check={isNewListUI}
-        label={t('setting_basic_new_list_ui')}
-        onChange={setNewListUI}
+        check={isNewUI}
+        label={t('setting_basic_play_detail_new_ui')}
+        onChange={setNewUI}
       />
     </View>
   )

@@ -96,6 +96,7 @@ const defaultSetting: LX.AppSetting = {
   'player.isEnableSlideSwitchSong': true,
 
   'playDetail.isCoverSpin': true,
+  'playDetail.style.newUI': true,
   'playDetail.style.align': 'center',
   'playDetail.style.miniLyricAlign': 'center',
   'playDetail.style.coverSize': 100,

@@ -7,7 +7,7 @@ import { useStatusbarHeight } from '@/store/common/hook';
 import { Icon } from '@/components/common/Icon';
 import Text from '@/components/common/Text';
 import { toast } from '@/utils/tools';
-import { sendCaptcha, loginByPhone, buildCookieString, getVerifyInfo, verifyUserInfo } from '@/utils/kugouApi';
+import { sendCaptcha, loginByPhone, buildCookieString, getVerifyInfo, verifyUserInfo } from '@/utils/musicSdk/kg/utils/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

@@ -10,7 +10,7 @@ import { useTheme } from '@/store/theme/hook';
 import { useStatusbarHeight } from '@/store/common/hook';
 import { Icon } from '@/components/common/Icon';
 import Text from '@/components/common/Text';
-import { getVerifyInfo, verifyUserInfo } from '@/utils/kugouApi';
+import { getVerifyInfo, verifyUserInfo } from '@/utils/musicSdk/kg/utils/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

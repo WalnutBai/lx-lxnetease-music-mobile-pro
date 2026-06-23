@@ -70,7 +70,7 @@ export default memo(() => {
   })()
   const isTxLiked = useIsTxLiked(txLikeKey)
 
-  const kgSongId = (musicInfo?.source === 'kg' && musicInfo.meta?.songId) || ''
+  const kgSongId = (musicInfo?.source === 'kg' && ((musicInfo.meta as any)?.hash || musicInfo.meta?.songId)) || ''
   const isKgLiked = useIsKgLiked(kgSongId)
 
   const isLiked = musicInfo?.source === 'wy' ? isWyLiked : musicInfo?.source === 'tx' ? isTxLiked : musicInfo?.source === 'kg' ? isKgLiked : false

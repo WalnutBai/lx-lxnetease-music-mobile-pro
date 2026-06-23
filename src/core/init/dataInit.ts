@@ -11,7 +11,7 @@ import { TEMP_FILE_PATH } from '@/utils/tools'
 // import { play, playList } from '../player/player'
 import wyUserApi from '@/utils/musicSdk/wy/user'
 import txUserApi from '@/utils/musicSdk/tx/user'
-import { getUserPlaylists as getKgUserPlaylists } from '@/utils/kugouApi'
+import { getUserPlaylists as getKgUserPlaylists } from '@/utils/musicSdk/kg/utils/api'
 import {
   setWyFollowedArtists,
   setWyLikedSongs,
@@ -161,7 +161,7 @@ export default async (appSetting: LX.AppSetting) => {
         if (favoritesPlaylist) {
           bootLog('Kg like list init...')
           try {
-            const { getPlaylistSongs } = await import('@/utils/kugouApi')
+            const { getUserPlaylists, getPlaylistSongs } = await import('@/utils/musicSdk/kg/utils/api')
             const allLikedIds: string[] = []
             let page = 1
             const pageSize = 500
@@ -171,7 +171,8 @@ export default async (appSetting: LX.AppSetting) => {
               const songsResult = await getPlaylistSongs(kg_cookie, favoritesPlaylist.id, page, pageSize)
               if (songsResult.success && songsResult.data?.list?.length) {
                 for (const song of songsResult.data.list) {
-                  const songId = song.songmid || song.hash || song.audio_id
+                  // 优先使用 hash 作为唯一标识（audio_id/songmid 可能为 0 导致多首歌共享同一 ID）
+                  const songId = song.hash || song.songmid || song.audio_id
                   if (songId) {
                     allLikedIds.push(String(songId))
                   }

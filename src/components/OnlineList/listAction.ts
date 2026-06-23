@@ -19,7 +19,7 @@ import commonState from '@/store/common/state'
 import wyApi from '@/utils/musicSdk/wy/user'
 import txApi from '@/utils/musicSdk/tx/user'
 import { log } from '@/utils/log'
-import { addSongToPlaylist, removeSongsFromPlaylist } from '@/utils/kugouApi'
+import { addSongToPlaylist, removeSongsFromPlaylist } from '@/utils/musicSdk/kg/utils/api'
 
 export const handleShowAlbumDetail = (componentId: string, musicInfo: LX.Music.MusicInfoOnline) => {
   const albumId = musicInfo.meta.albumId
@@ -246,14 +246,19 @@ export const handleKgLikeMusic = async (musicInfo: LX.Music.MusicInfoOnline) => 
     return
   }
 
+  // 使用 hash 作为喜欢的唯一标识（audio_id 可能为 0 导致多首歌共享同一 ID）
+  const meta = musicInfo.meta as any
+  const songHash = meta.hash || ''
   const songId = musicInfo.meta.songId
-  const isLiked = userState.kg_liked_song_ids.has(String(songId))
+  // 优先使用 hash 作为 liked 状态的 key，因为 hash 是每首歌唯一的
+  const likeKey = songHash || String(songId)
+  const isLiked = userState.kg_liked_song_ids.has(likeKey)
   const like = !isLiked
 
   try {
     if (like) {
       // 获取用户的歌单列表，找到"我喜欢"歌单（is_def === 2）
-      const { getUserPlaylists } = await import('@/utils/kugouApi')
+      const { getUserPlaylists, getPlaylistSongs } = await import('@/utils/musicSdk/kg/utils/api')
       const playlistsResult = await getUserPlaylists(cookie)
       if (!playlistsResult.success || !playlistsResult.data) {
         toast('获取歌单列表失败')
@@ -278,13 +283,13 @@ export const handleKgLikeMusic = async (musicInfo: LX.Music.MusicInfoOnline) => 
       const result = await addSongToPlaylist(cookie, favoritesPlaylist.listid, songInfo)
       if (result.success) {
         toast('喜欢成功')
-        addKgLikedSong(songId)
+        addKgLikedSong(likeKey)
       } else {
         toast(`操作失败: ${result.message}，可能是Cookie已失效，请重新登录`)
       }
     } else {
       // 取消喜欢 - 获取"我喜欢"歌单的歌曲列表，找到对应的歌曲并移除
-      const { getUserPlaylists, getPlaylistSongs } = await import('@/utils/kugouApi')
+      const { getUserPlaylists, getPlaylistSongs } = await import('@/utils/musicSdk/kg/utils/api')
       const playlistsResult = await getUserPlaylists(cookie)
       if (!playlistsResult.success || !playlistsResult.data) {
         toast('获取歌单列表失败，可能是Cookie已失效，请重新登录')
@@ -305,14 +310,12 @@ export const handleKgLikeMusic = async (musicInfo: LX.Music.MusicInfoOnline) => 
       }
       
       const meta = musicInfo.meta as any
-      const songHash = (meta.hash || meta.songmid || songId).toString().toLowerCase()
+      const songHash = (meta.hash || '').toString().toLowerCase()
       console.log('[KgLike] 查找歌曲:', { songHash, totalSongs: songsResult.data.list.length })
       
       const targetSong = songsResult.data.list.find((s: any) => {
-        const sSongmid = (s.songmid || '').toString().toLowerCase()
         const sHash = (s.hash || '').toString().toLowerCase()
-        return sSongmid === songHash || sHash === songHash || 
-               sSongmid.includes(songHash) || songHash.includes(sSongmid)
+        return sHash === songHash || sHash.includes(songHash) || songHash.includes(sHash)
       })
       
       console.log('[KgLike] 找到歌曲:', { found: !!targetSong, fileId: targetSong?.fileId, listid: favoritesPlaylist.listid })
@@ -321,7 +324,7 @@ export const handleKgLikeMusic = async (musicInfo: LX.Music.MusicInfoOnline) => 
         const removeResult = await removeSongsFromPlaylist(cookie, favoritesPlaylist.listid, [Number(targetSong.fileId)])
         if (removeResult.success) {
           toast('取消喜欢成功')
-          removeKgLikedSong(songId)
+          removeKgLikedSong(likeKey)
         } else {
           toast(`操作失败: ${removeResult.message}，可能是Cookie已失效，请重新登录`)
         }

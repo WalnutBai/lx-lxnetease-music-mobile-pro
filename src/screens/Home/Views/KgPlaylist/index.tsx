@@ -5,7 +5,7 @@
 import { memo, useEffect, useState, useCallback, useRef } from 'react'
 import { View, FlatList, RefreshControl, BackHandler, StyleSheet, Keyboard, TouchableOpacity } from 'react-native'
 import ListItem from './ListItem'
-import { getUserPlaylists, subscribePlaylist, unsubscribePlaylist } from '@/utils/kugouApi'
+import { getUserPlaylists, subscribePlaylist, unsubscribePlaylist } from '@/utils/musicSdk/kg/utils/api'
 import { useI18n } from '@/lang'
 import { useTheme } from '@/store/theme/hook'
 import Text from '@/components/common/Text'

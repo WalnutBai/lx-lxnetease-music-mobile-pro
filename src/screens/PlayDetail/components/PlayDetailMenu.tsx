@@ -69,7 +69,7 @@ export default forwardRef<PlayDetailMenuType, PlayDetailMenuProps>((props, ref) 
         const likeKey = songId && /^\d+$/.test(String(songId)) ? String(songId) : songMid
         setIsLiked(userState.tx_liked_song_ids.has(likeKey));
       } else if (selectInfo.musicInfo.source === 'kg') {
-        setIsLiked(userState.kg_liked_song_ids.has(String(selectInfo.musicInfo.meta.songId)));
+        setIsLiked(userState.kg_liked_song_ids.has(String((selectInfo.musicInfo.meta as any)?.hash || selectInfo.musicInfo.meta.songId)));
       }
       if (visible) {
         menuRef.current?.show(position);

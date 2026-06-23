@@ -28,7 +28,7 @@ import MusicDownloadModal, {
 import {createStyle, toast} from '@/utils/tools'
 import wyApi from '@/utils/musicSdk/wy/user'
 import txUserApi from '@/utils/musicSdk/tx/user'
-import { removeSongsFromPlaylist as removeKgSongsFromPlaylist, getPlaylistSongs as getKgPlaylistSongs } from '@/utils/kugouApi'
+import { removeSongsFromPlaylist as removeKgSongsFromPlaylist, getPlaylistSongs as getKgPlaylistSongs } from '@/utils/musicSdk/kg/utils/api'
 import {batchDownload} from "@/core/download.ts"
 import {getMvUrl as getWyMvUrl} from "@/utils/musicSdk/wy/mv.js"
 import {getMvUrl as getTxMvUrl} from "@/utils/musicSdk/tx/mv.js"

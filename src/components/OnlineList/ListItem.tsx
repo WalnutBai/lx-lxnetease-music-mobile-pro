@@ -91,7 +91,7 @@ export default memo(
       ? String(txSongId) 
       : (item.meta as any).songmid || (item.meta as any).strMediaMid || (typeof item.id === 'string' && item.id.startsWith('tx_') ? item.id.slice(3) : item.id)
     const isTxLiked = useIsTxLiked(txSongMid)
-    const isKgLiked = useIsKgLiked(item.meta.songId)
+    const isKgLiked = useIsKgLiked((item.meta as any).hash || item.meta.songId)
 
     const moreButtonRef = useRef<TouchableOpacity>(null)
     const handleShowMenu = () => {

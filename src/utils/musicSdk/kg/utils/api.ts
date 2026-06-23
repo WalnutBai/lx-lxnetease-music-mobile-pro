@@ -6,7 +6,7 @@
 import axios from 'axios';
 import { stringMd5 } from 'react-native-quick-md5';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { generateSidEdt, cryptoAesEncrypt, cryptoRSAEncrypt, cryptoAesDecrypt, rsaEncrypt2, playlistAesEncrypt, playlistAesDecrypt } from './kugouCrypto';
+import { generateSidEdt, cryptoAesEncrypt, cryptoRSAEncrypt, cryptoAesDecrypt, rsaEncrypt2, playlistAesEncrypt, playlistAesDecrypt } from './crypto';
 
 // 酷狗 API 配置
 const KG_CONFIG = {

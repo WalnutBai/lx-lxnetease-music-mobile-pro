@@ -6,7 +6,7 @@ import { setBgPic } from '@/core/common'
 import wyUserApi from '@/utils/musicSdk/wy/user';
 import txUserApi from '@/utils/musicSdk/tx/user';
 import { setWyFollowedArtists, setWyLikedSongs, setWySubscribedAlbums, setTxLikedSongs, setKgLikedSongs } from '@/store/user/action';
-import { getUserPlaylists, getPlaylistSongs } from '@/utils/kugouApi';
+import { getUserPlaylists, getPlaylistSongs } from '@/utils/musicSdk/kg/utils/api';
 import { toast } from '@/utils/tools';
 
 // const handleUpdateSourceNmaes = () => {
@@ -157,8 +157,8 @@ export default async (setting: LX.AppSetting) => {
           const songsResult = await getPlaylistSongs(cookie, favoritesPlaylist.id, page, pageSize);
           if (songsResult.success && songsResult.data?.list?.length) {
             for (const song of songsResult.data.list) {
-              // 使用 songmid 或 hash 作为唯一标识
-              const songId = song.songmid || song.hash || song.audio_id;
+              // 优先使用 hash 作为唯一标识（audio_id/songmid 可能为 0 导致多首歌共享同一 ID）
+              const songId = song.hash || song.songmid || song.audio_id;
               if (songId) {
                 allLikedIds.push(String(songId));
               }

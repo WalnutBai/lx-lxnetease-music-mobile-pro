@@ -19,10 +19,12 @@ const isEnableUserApiLog = () => global.lx.isEnableUserApiLog
 
 const userApiLog = {
   info: (...msgs: any[]) => {
+    if (!global.lx.isEnableLog) return
     if (!isEnableUserApiLog()) return
     log.info(...msgs)
   },
   error: (...msgs: any[]) => {
+    if (!global.lx.isEnableLog) return
     if (!isEnableUserApiLog()) return
     log.error(...msgs)
   },

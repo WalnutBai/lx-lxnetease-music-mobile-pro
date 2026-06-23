@@ -444,7 +444,7 @@
   "setting_other_cache_getting": "統計快取中...",
   "setting_other_cache_size": "目前已用快取大小：",
   "setting_other_dislike_list_show_btn": "編輯規則",
-  "setting_other_log": "錯誤日誌（執行發生異常時的日誌）",
+  "setting_other_log": "錯誤日誌（執行發生異常時的日誌沒事別開）",
   "setting_other_log_btn_clean": "清空",
   "setting_other_log_btn_hide": "關閉",
   "setting_other_log_btn_show": "查看日誌",

@@ -92,6 +92,8 @@ declare global {
       'common.isEnableSyncLog': boolean
       'common.isEnableUserApiLog': boolean
       'common.isEnableWebDAVLog': boolean
+      'common.isEnableSearchLog': boolean
+      'common.isEnablePlayerLog': boolean
 
       'common.navStatus': Partial<Record<NAV_ID_Type, boolean>>;
 

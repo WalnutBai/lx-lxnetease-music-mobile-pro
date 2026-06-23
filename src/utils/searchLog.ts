@@ -7,21 +7,14 @@ export const searchLog = {
   init() {
     const settingValue = settingState.setting['common.isEnableSearchLog']
     this.isEnabled = settingValue !== undefined ? settingValue : false
-    if (this.isEnabled) {
-      log.info('[Search Log] 初始化搜索日志模块')
-      log.info('[Search Log] 设置值: ' + JSON.stringify(settingValue))
-      log.info('[Search Log] 状态: ' + (this.isEnabled ? '开启' : '关闭'))
-    }
   },
 
   updateEnabled(enabled: boolean) {
     this.isEnabled = enabled
-    if (this.isEnabled) {
-      log.info('[Search Log] 更新搜索日志状态: ' + (enabled ? '开启' : '关闭'))
-    }
   },
 
   info(...msgs: any[]) {
+    if (!global.lx.isEnableLog) return
     if (!this.isEnabled) return
     const msg = msgs
       .map((m) =>
@@ -32,6 +25,7 @@ export const searchLog = {
   },
 
   warn(...msgs: any[]) {
+    if (!global.lx.isEnableLog) return
     if (!this.isEnabled) return
     const msg = msgs
       .map((m) =>
@@ -42,6 +36,7 @@ export const searchLog = {
   },
 
   error(...msgs: any[]) {
+    if (!global.lx.isEnableLog) return
     if (!this.isEnabled) return
     const msg = msgs
       .map((m) =>

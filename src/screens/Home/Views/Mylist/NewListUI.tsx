@@ -380,7 +380,7 @@ export default memo(() => {
     void refreshListInfo()
   }, [refreshListInfo])
 
-  // 当从详情页返回时，后台刷新封面数据（不清空已有数据）
+
   useEffect(() => {
     const subscription = Navigation.events().registerComponentDidAppearListener(({ componentId: appearedId }) => {
       const homeId = commonState.componentIds.find(c => c.name === 'home')?.id

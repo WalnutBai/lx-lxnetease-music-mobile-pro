@@ -26,6 +26,7 @@ global.lx = {
 
   isPlayedStop: false,
 
+  isEnableLog: true,
   isEnableSyncLog: false,
   isEnableUserApiLog: false,
 

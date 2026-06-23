@@ -74,13 +74,18 @@ export default memo(() => {
   }
 
   const handleMaxLogLinesChange = (text: string, callback: (value: string) => void) => {
+    if (text === '' || text === undefined) {
+      setMaxLogLines(DEFAULT_MAX_LOG_LINES)
+      callback(String(DEFAULT_MAX_LOG_LINES))
+      return
+    }
     const num = parseInt(text, 10)
     if (!isNaN(num) && num > 0) {
       setMaxLogLines(num)
       callback(String(num))
     } else {
-      callback(String(DEFAULT_MAX_LOG_LINES))
       setMaxLogLines(DEFAULT_MAX_LOG_LINES)
+      callback(String(DEFAULT_MAX_LOG_LINES))
     }
   }
 

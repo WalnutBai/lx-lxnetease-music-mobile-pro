@@ -1,7 +1,6 @@
 import TrackPlayer, { State as TPState, Event as TPEvent } from 'react-native-track-player'
 import { setMusicUrl } from '@/core/player/player'
 import playerState from '@/store/player/state'
-import { log } from '@/utils/log'
 // import { store } from '@/store'
 // import { action as playerAction, STATUS } from '@/store/modules/player'
 import { isTempId, isEmpty } from './utils'
@@ -104,13 +103,13 @@ const registerPlaybackService = async () => {
   // })
 
   TrackPlayer.addEventListener(TPEvent.PlaybackError, async (err: any) => {
-    log.info('[Player] Playback issue detected, starting recovery process...')
-    log.info('[Player] Error info:', err?.message || err?.code || 'Unknown')
+    playerLog.info('Playback issue detected, starting recovery process...')
+    playerLog.info('Error info:', err?.message || err?.code || 'Unknown')
 
     try {
       const currentMusicInfo = playerState.playMusicInfo.musicInfo
       if (!currentMusicInfo) {
-        log.warn('[Player] No current music info available')
+        playerLog.warn('No current music info available')
         return
       }
 
@@ -124,36 +123,36 @@ const registerPlaybackService = async () => {
       }
 
       if (retryGetUrlNum > MAX_RETRY_NUM) {
-        log.error('[Player] Max retry attempts reached, stopping playback recovery')
-        log.error('[Player] Playback failed for:', currentMusicInfo.name, currentMusicInfo.id)
+        playerLog.error('Max retry attempts reached, stopping playback recovery')
+        playerLog.error('Playback failed for:', currentMusicInfo.name, currentMusicInfo.id)
         retryGetUrlId = null
         retryGetUrlNum = 0
         return
       }
 
-      log.info(`[Player] Retry attempt ${retryGetUrlNum}/${MAX_RETRY_NUM} for:`, currentMusicInfo.name)
+      playerLog.info(`Retry attempt ${retryGetUrlNum}/${MAX_RETRY_NUM} for:`, currentMusicInfo.name)
 
-      log.info('[Player] Clearing music URL cache for:', currentMusicInfo.name, currentMusicInfo.id)
+      playerLog.info('Clearing music URL cache for:', currentMusicInfo.name, currentMusicInfo.id)
       const allKeys = await getAllKeys()
       const prefix = '@music_url__'
       const musicId = currentMusicInfo.id
       const cacheKeys = allKeys.filter(key => key.startsWith(prefix + musicId))
       if (cacheKeys.length > 0) {
-        log.info('[Player] Found cached keys:', cacheKeys)
+        playerLog.info('Found cached keys:', cacheKeys)
         await removeDataMultiple(cacheKeys)
-        log.info('[Player] Music URL cache cleared successfully')
+        playerLog.info('Music URL cache cleared successfully')
       } else {
-        log.info('[Player] No cached URL found for this music')
+        playerLog.info('No cached URL found for this music')
       }
 
       global.lx.playerError = true
-      log.info('[Player] Attempting to re-fetch music URL')
+      playerLog.info('Attempting to re-fetch music URL')
       setTimeout(() => {
-        log.info('[Player] Re-fetching music URL...')
+        playerLog.info('Re-fetching music URL...')
         setMusicUrl(currentMusicInfo, true)
       }, 1000)
     } catch (clearErr) {
-      log.warn('[Player] Cache clearing had an issue, but will still retry:', clearErr)
+      playerLog.warn('Cache clearing had an issue, but will still retry:', clearErr)
     }
 
     if (process.env.NODE_ENV !== 'production') {
@@ -161,7 +160,7 @@ const registerPlaybackService = async () => {
         const currentTrack = await TrackPlayer.getCurrentTrack()
         if (currentTrack != null) {
           const track = await TrackPlayer.getTrack(currentTrack)
-          log.debug('[Player] Track URL:', track?.url)
+          playerLog.info('Track URL:', track?.url)
         }
       } catch (e) { }
     }

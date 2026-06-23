@@ -450,7 +450,7 @@
   "setting_other_cache_getting": "统计缓存中...",
   "setting_other_cache_size": "当前已用缓存大小：",
   "setting_other_dislike_list_show_btn": "编辑规则",
-  "setting_other_log": "错误日志（运行发生异常时的日志）",
+  "setting_other_log": "错误日志（运行发生异常时的日志没事别开）",
   "setting_other_log_btn_clean": "清空",
   "setting_other_log_btn_hide": "关闭",
   "setting_other_log_btn_show": "查看日志",

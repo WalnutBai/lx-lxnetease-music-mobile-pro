@@ -152,6 +152,7 @@ export const filterData = async (rawList, options = {}) => {
 
     if (item.audio_info) {
       return {
+        id: `${item.audio_info.audio_id}_${item.audio_info.hash}`,
         name: decodeName(item.songname),
         singer: decodeName(item.author_name),
         albumName: decodeName(item.album_info?.album_name || item.remark),
@@ -184,6 +185,7 @@ export const filterData = async (rawList, options = {}) => {
     }
 
     return {
+      id: `${item.audio_id}_${item.hash}`,
       name: decodeName(item.songname),
       singer: decodeName(item.singername) || formatSingerName(item.authors, 'author_name'),
       albumName: decodeName(item.album_name || item.remark),

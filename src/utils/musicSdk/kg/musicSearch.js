@@ -50,6 +50,7 @@ export default {
       const { types = [], _types = {} } = qualityInfoMap[item.FileHash] || {}
 
       return {
+        id: `${item.Audioid}_${item.FileHash}`,
         singer: decodeName(formatSingerName(item.Singers, 'name')),
         name: decodeName(item.SongName),
         albumName: decodeName(item.AlbumName),

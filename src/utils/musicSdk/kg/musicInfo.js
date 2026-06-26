@@ -82,6 +82,7 @@ export const filterMusicInfoList = (rawList) => {
       }
     }
     list.push({
+      id: `${item.audio_info.audio_id}_${item.audio_info.hash}`,
       singer: decodeName(item.author_name),
       name: decodeName(item.songname),
       albumName: decodeName(item.album_info.album_name),

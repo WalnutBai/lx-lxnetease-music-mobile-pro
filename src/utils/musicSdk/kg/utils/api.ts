@@ -1154,6 +1154,7 @@ export async function getPlaylistSongs(
     const result = response.data
     if (result.status === 1 && result.data) {
       const list = (result.data.songs || []).map((item: any, index: number) => ({
+        id: `${item.audio_id || ''}_${item.hash || ''}`,
         songmid: String(item.audio_id || item.hash || ''),
         name: item.songname || item.filename || item.name || '',
         singer: item.singername || '',

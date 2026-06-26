@@ -5,6 +5,8 @@ import { handlePlayerAction, type PlayerAction } from './playerAction'
 import { handleSonglistAction } from './songlistAction'
 import { handleSearchAction } from './searchAction'
 import { startMusicRecognition } from '@/core/musicRecognition'
+import { setNavActiveId } from '@/core/common'
+import { setPendingAction } from '@/core/pendingAction'
 import { extname, stat } from '@/utils/fs'
 import { handleFileMusicAction, handleFileJSAction, handleFileLXMCAction } from './fileAction'
 
@@ -43,6 +45,22 @@ const handleLinkAction = async (link: string) => {
       break
     case 'recognition':
       await startMusicRecognition()
+      break
+    case 'setting':
+      setNavActiveId('nav_setting')
+      break
+    case 'nav':
+      if (action === 'search' || params.target === 'search') {
+        setPendingAction({ type: 'searchFocus' })
+        setNavActiveId('nav_search')
+        setTimeout(() => global.app_event.searchDeepLink(params.keyword || '', '', params.type || ''), 100)
+      } else if (action === 'songlist' || params.target === 'songlist') {
+        setPendingAction({ type: 'songlistImport' })
+        setNavActiveId('nav_songList')
+        setTimeout(() => global.app_event.openSonglistImport(), 100)
+      } else if (action === 'setting' || params.target === 'setting') {
+        setNavActiveId('nav_setting')
+      }
       break
     // default: throw new Error('Unknown type: ' + type)
   }

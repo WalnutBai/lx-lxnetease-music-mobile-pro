@@ -23,6 +23,7 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       tools:targetApi="n">
+      <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
       <activity
         android:name=".MainActivity"
         android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"

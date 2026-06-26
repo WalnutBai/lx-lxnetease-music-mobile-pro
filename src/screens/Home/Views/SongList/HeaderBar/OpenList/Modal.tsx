@@ -53,31 +53,28 @@ export interface ModalType {
 
 export default forwardRef<ModalType, ModalProps>(({ onOpenId }, ref) => {
   const alertRef = useRef<ConfirmAlertType>(null)
-  // const sourceSelectorRef = useRef<SourceSelectorType>(null)
   const inputRef = useRef<IdInputType>(null)
   const [visible, setVisible] = useState(false)
+  const [alertKey, setAlertKey] = useState(0)
   const theme = useTheme()
   const t = useI18n()
 
   const handleShow = (source: Source) => {
-    alertRef.current?.setVisible(true)
+    setAlertKey(k => k + 1)
     requestAnimationFrame(() => {
-      inputRef.current?.setText('')
-      // sourceSelectorRef.current?.setSource(source)
+      alertRef.current?.setVisible(true)
       setTimeout(() => {
         inputRef.current?.focus()
       }, 300)
     })
   }
+
   useImperativeHandle(ref, () => ({
     show(source) {
-      if (visible) handleShow(source)
-      else {
-        setVisible(true)
-        requestAnimationFrame(() => {
-          handleShow(source)
-        })
-      }
+      if (!visible) setVisible(true)
+      requestAnimationFrame(() => {
+        handleShow(source)
+      })
     },
   }))
 
@@ -90,7 +87,7 @@ export default forwardRef<ModalType, ModalProps>(({ onOpenId }, ref) => {
   }
 
   return visible ? (
-    <ConfirmAlert ref={alertRef} onConfirm={handleConfirm}>
+    <ConfirmAlert key={alertKey} ref={alertRef} onConfirm={handleConfirm}>
       <View style={styles.content}>
         <View style={styles.col}>
           {/* <SourceSelector style={{ ...styles.selector, backgroundColor: theme['c-primary-input-background'] }} ref={sourceSelectorRef} onSourceChange={onSourceChange} /> */}

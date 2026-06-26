@@ -1,4 +1,4 @@
-import { useRef, forwardRef, useImperativeHandle } from 'react'
+import { useRef, forwardRef, useImperativeHandle, useEffect } from 'react'
 // import { Icon } from '@/components/common/Icon'
 import Button from '@/components/common/Button'
 // import { navigations } from '@/navigation'
@@ -32,6 +32,17 @@ export default forwardRef<OpenListType, OpenListProps>(({ onOpenDetail }, ref) =
       songlistInfoRef.current.source = source
     },
   }))
+
+  useEffect(() => {
+    const handleOpenModal = (source: Source) => {
+      songlistInfoRef.current.source = source
+      modalRef.current?.show(source)
+    }
+    global.app_event.on('_openSonglistModal', handleOpenModal)
+    return () => {
+      global.app_event.off('_openSonglistModal', handleOpenModal)
+    }
+  }, [])
 
   const handleOpenSonglist = (id: string) => {
     // console.log(id, songlistInfoRef.current.source)

@@ -29,6 +29,7 @@ export interface HeaderBarProps {
 export interface HeaderBarType {
   setSourceList: SourceSelectorType['setSourceList']
   setText: SearchInputType['setText']
+  focus: SearchInputType['focus']
   blur: SearchInputType['blur']
 }
 
@@ -46,6 +47,9 @@ export default forwardRef<HeaderBarType, HeaderBarProps>(
         },
         setText(text) {
           searchInputRef.current?.setText(text)
+        },
+        focus() {
+          searchInputRef.current?.focus()
         },
         blur() {
           searchInputRef.current?.blur()

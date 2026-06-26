@@ -10,14 +10,6 @@ const PLATFORM_MAP: Record<string, string> = {
   mg: 'mg',
   bilibili: 'bilibili',
   git: 'git',
-  '酷我': 'kw',
-  '酷狗': 'kg',
-  'QQ': 'tx',
-  'qq': 'tx',
-  '网易': 'wy',
-  '咪咕': 'mg',
-  'bilibili': 'bilibili',
-  'b站': 'bilibili',
 }
 
 const TYPE_MAP: Record<string, string> = {
@@ -25,10 +17,6 @@ const TYPE_MAP: Record<string, string> = {
   songlist: 'songlist',
   singer: 'singer',
   album: 'album',
-  '音乐': 'music',
-  '歌单': 'songlist',
-  '歌手': 'singer',
-  '专辑': 'album',
 }
 
 const handleSearch = async (params: Record<string, any>) => {

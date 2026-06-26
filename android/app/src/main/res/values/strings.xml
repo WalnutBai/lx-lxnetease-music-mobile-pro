@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">LX-X Music</string>
     <string name="widget_description">LX-X Widget</string>
+    <string name="shortcut_recognition">识曲</string>
+    <string name="shortcut_recognition_long">听歌识曲</string>
+    <string name="shortcut_setting">设置</string>
+    <string name="shortcut_setting_long">打开设置</string>
 </resources>

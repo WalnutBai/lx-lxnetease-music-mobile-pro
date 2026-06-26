@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
+import { InteractionManager } from 'react-native'
 import { type LayoutChangeEvent, View, BackHandler } from 'react-native'
 import HeaderBar, { type HeaderBarProps, type HeaderBarType } from './HeaderBar'
 import searchState, { type SearchType } from '@/store/search/state'
@@ -6,6 +7,7 @@ import commonState from '@/store/common/state'
 import searchMusicState from '@/store/search/music/state'
 import searchSonglistState, { type ListInfoItem } from '@/store/search/songlist/state'
 import { getSearchSetting, saveSearchSetting } from '@/utils/data'
+import { consumePendingAction } from '@/core/pendingAction'
 import {createStyle, toast} from '@/utils/tools'
 import TipList, { type TipListType } from './TipList'
 import List, { type ListType } from './List'
@@ -127,13 +129,16 @@ export default () => {
             break
         }
       }
-      if (keyword || source || type) {
+      if (keyword) {
         listRef.current?.loadList(
-          keyword || searchState.searchText,
+          keyword,
           searchInfo.current.source,
           searchInfo.current.searchType,
         )
       }
+      InteractionManager.runAfterInteractions(() => {
+        headerBarRef.current?.focus()
+      })
     }
     global.app_event.on('searchDeepLink', handleSearchDeepLink)
 
@@ -145,7 +150,7 @@ export default () => {
 
   useEffect(() => {
     const handleNavChange = async (id: string) => {
-      if (id === 'nav_search' && searchState.searchText) {
+      if (id === 'nav_search') {
         const info = await getSearchSetting()
         searchInfo.current.source = info.source
         searchInfo.current.searchType = info.type
@@ -154,10 +159,24 @@ export default () => {
           info.type === 'songlist' ? searchSonglistState.sources : searchMusicState.sources,
           info.source,
         )
-        listRef.current?.loadList(searchState.searchText, info.source, info.type)
+        if (searchState.searchText) {
+          listRef.current?.loadList(searchState.searchText, info.source, info.type)
+        }
+        if (consumePendingAction('searchFocus')) {
+          InteractionManager.runAfterInteractions(() => {
+            headerBarRef.current?.focus()
+          })
+        }
       }
     }
     global.state_event.on('navActiveIdUpdated', handleNavChange)
+
+    if (consumePendingAction('searchFocus')) {
+      InteractionManager.runAfterInteractions(() => {
+        headerBarRef.current?.focus()
+      })
+    }
+
     return () => {
       global.state_event.off('navActiveIdUpdated', handleNavChange)
     }

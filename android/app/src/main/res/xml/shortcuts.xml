@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="recognition"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_recognition"
+        android:shortcutShortLabel="@string/shortcut_recognition"
+        android:shortcutLongLabel="@string/shortcut_recognition_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:category="android.intent.category.DEFAULT"
+            android:data="lxmusic://recognition" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="setting"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_setting"
+        android:shortcutShortLabel="@string/shortcut_setting"
+        android:shortcutLongLabel="@string/shortcut_setting_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:category="android.intent.category.DEFAULT"
+            android:data="lxmusic://nav?target=setting" />
+    </shortcut>
+
+</shortcuts>

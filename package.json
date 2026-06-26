@@ -1,7 +1,7 @@
 {
   "name": "lx-lxwalnut-music-mobile",
-  "version": "26.06.16",
-  "versionCode": 260616,
+  "version": "26.06.17",
+  "versionCode": 260617,
   "private": true,
   "scripts": {
     "dev": "react-native run-android --active-arch-only",

@@ -1,6 +1,7 @@
 import { getSongListSetting, saveSongListSetting } from '@/utils/data'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { StyleSheet, View, BackHandler } from 'react-native'
+import { consumePendingAction } from '@/core/pendingAction'
 
 import HeaderBar, { type HeaderBarProps, type HeaderBarType } from './HeaderBar'
 import songlistState, { type InitState, type SortInfo, type ListInfoItem } from '@/store/songlist/state'
@@ -138,6 +139,27 @@ export default () => {
   const handleBack = useCallback(() => {
     setSelectedList(null)
     setScrollToMusicInfo(null)
+  }, [])
+
+  useEffect(() => {
+    const handleOpenImport = () => {
+      headerBarRef.current?.setSource(
+        songlistInfo.current.source,
+        songlistInfo.current.sortId,
+        '',
+        songlistInfo.current.tagId
+      )
+      global.app_event.emit('_openSonglistModal', songlistInfo.current.source)
+    }
+    global.app_event.on('openSonglistImport', handleOpenImport)
+
+    if (consumePendingAction('songlistImport')) {
+      setTimeout(() => handleOpenImport(), 300)
+    }
+
+    return () => {
+      global.app_event.off('openSonglistImport', handleOpenImport)
+    }
   }, [])
 
   if (selectedList) {

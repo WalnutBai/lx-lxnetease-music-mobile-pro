@@ -183,6 +183,10 @@ export class AppEvent extends Event {
     this.emit('searchDeepLink', keyword, source, type)
   }
 
+  openSonglistImport() {
+    this.emit('openSonglistImport')
+  }
+
   async jumpListPosition() {
     const playMusicInfo = playerState.playMusicInfo
     let listId = playMusicInfo.listId

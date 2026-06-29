@@ -26,10 +26,15 @@ const useCutoutLeft = () => {
   })
 
   useEffect(() => {
-    void getCutoutLeftPx().then((px: number) => {
-      const { PixelRatio } = require('react-native')
-      setCutoutLeftDp(px > 0 ? Math.round(px / PixelRatio.get()) : 0)
-    })
+    const update = () => {
+      void getCutoutLeftPx().then((px: number) => {
+        const { PixelRatio } = require('react-native')
+        setCutoutLeftDp(px > 0 ? Math.round(px / PixelRatio.get()) : 0)
+      })
+    }
+    update()
+    const sub = Dimensions.addEventListener('change', update)
+    return () => sub?.remove()
   }, [])
 
   return cutoutLeftDp

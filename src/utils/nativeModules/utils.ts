@@ -68,6 +68,10 @@ export const getWindowSize = async (): Promise<{ width: number; height: number }
   return UtilsModule.getWindowSize()
 }
 
+export const getCutoutLeftPx = async (): Promise<number> => {
+  return UtilsModule.getCutoutLeftPx()
+}
+
 export const onWindowSizeChange = (
   handler: (size: { width: number; height: number }) => void
 ): (() => void) => {

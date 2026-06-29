@@ -11,25 +11,35 @@ import { windowSizeTools } from './windowSizeTools'
 const designWidth = 375.0
 const designHeight = 667.0
 
-const size = windowSizeTools.getSize()
-// console.log('size', size)
-let screenW = size.width
-let screenH = size.height
-if (screenW > screenH) {
-  const temp = screenW
-  screenW = screenH
-  screenH = temp
-}
+let screenW = 0
+let screenH = 0
 let fontScale = PixelRatio.getFontScale()
 let pixelRatio = PixelRatio.get()
-let screenPxW = PixelRatio.getPixelSizeForLayoutSize(screenW)
-let screenPxH = PixelRatio.getPixelSizeForLayoutSize(screenH)
-// console.log(screenPxW, screenPxH)
+let screenPxW = 0
+let screenPxH = 0
+let scale = 1
 
-const scaleW = screenPxW / designWidth
-const scaleH = screenPxH / designHeight
-const scale = Math.min(scaleW, scaleH, 3.1)
-// console.log(scale)
+const recalc = () => {
+  const size = windowSizeTools.getSize()
+  screenW = size.width
+  screenH = size.height
+  if (screenW > screenH) {
+    const temp = screenW
+    screenW = screenH
+    screenH = temp
+  }
+  fontScale = PixelRatio.getFontScale()
+  pixelRatio = PixelRatio.get()
+  screenPxW = PixelRatio.getPixelSizeForLayoutSize(screenW)
+  screenPxH = PixelRatio.getPixelSizeForLayoutSize(screenH)
+
+  const scaleW = screenPxW / designWidth
+  const scaleH = screenPxH / designHeight
+  scale = Math.min(scaleW, scaleH, 3.1)
+}
+
+windowSizeTools.onSizeChanged(() => recalc())
+recalc()
 
 /**
  * 设置text

@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState, useEffect } from 'react'
 import { ScrollView, TouchableOpacity, View, Dimensions } from 'react-native'
 import { useNavActiveId, useStatusbarHeight, useBgPic } from '@/store/common/hook'
 import { useTheme } from '@/store/theme/hook'
@@ -13,13 +13,25 @@ import { BorderWidths } from '@/theme'
 import { useSettingValue } from '@/store/setting/hook'
 import ImageBackground from '@/components/common/ImageBackground'
 import { defaultHeaders } from '@/components/common/Image'
+import { getCutoutLeftPx } from '@/utils/nativeModules/utils'
 
 const NAV_WIDTH = 68
 
-const getCutoutLeft = () => {
-  const screen = Dimensions.get('screen')
-  const win = Dimensions.get('window')
-  return Math.max(0, screen.width - win.width)
+const useCutoutLeft = () => {
+  const [cutoutLeftDp, setCutoutLeftDp] = useState(() => {
+    const screen = Dimensions.get('screen')
+    const win = Dimensions.get('window')
+    return Math.max(0, screen.width - win.width)
+  })
+
+  useEffect(() => {
+    void getCutoutLeftPx().then((px: number) => {
+      const { PixelRatio } = require('react-native')
+      setCutoutLeftDp(px > 0 ? Math.round(px / PixelRatio.get()) : 0)
+    })
+  }, [])
+
+  return cutoutLeftDp
 }
 
 const styles = createStyle({
@@ -182,7 +194,8 @@ export default memo(() => {
   }, [navStatus, navOrder]);
 
   const isLandscapeStretch = useSettingValue('theme.isLandscapeStretch')
-  const cutoutLeft = isLandscapeStretch ? 0 : getCutoutLeft()
+  const rawCutoutLeft = useCutoutLeft()
+  const cutoutLeft = isLandscapeStretch ? 0 : rawCutoutLeft
 
   return (
     <View style={{ ...styles.container, marginLeft: cutoutLeft, borderRightColor: theme['c-border-background'], backgroundColor: showSidebarBg ? 'transparent' : undefined }}>

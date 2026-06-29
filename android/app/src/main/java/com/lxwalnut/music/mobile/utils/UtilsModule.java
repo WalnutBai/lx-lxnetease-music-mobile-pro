@@ -380,6 +380,30 @@ public class UtilsModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void getCutoutLeftPx(Promise promise) {
+    try {
+      Activity currentActivity = reactContext.getCurrentActivity();
+      if (currentActivity == null) {
+        promise.resolve(0);
+        return;
+      }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        android.view.WindowInsets insets = currentActivity.getWindow().getDecorView().getRootWindowInsets();
+        if (insets != null) {
+          android.view.DisplayCutout cutout = insets.getDisplayCutout();
+          if (cutout != null) {
+            promise.resolve(cutout.getSafeInsetLeft());
+            return;
+          }
+        }
+      }
+      promise.resolve(0);
+    } catch (Exception e) {
+      promise.resolve(0);
+    }
+  }
+
+  @ReactMethod
   public void isIgnoringBatteryOptimization(Promise promise) {
     promise.resolve(BatteryOptimizationUtil.isIgnoringBatteryOptimization(reactContext.getApplicationContext(), reactContext.getPackageName()));
   }

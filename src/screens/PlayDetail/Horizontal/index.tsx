@@ -1,6 +1,6 @@
-import { memo, useEffect } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { View, AppState, Dimensions } from 'react-native'
-import { screenkeepAwake, screenUnkeepAwake } from '@/utils/nativeModules/utils'
+import { screenkeepAwake, screenUnkeepAwake, getCutoutLeftPx } from '@/utils/nativeModules/utils'
 import StatusBar from '@/components/common/StatusBar'
 import MoreBtn from './MoreBtn'
 import Header from './components/Header'
@@ -17,18 +17,29 @@ import { createStyle } from '@/utils/tools'
 import { marginLeftRaw } from './constant'
 import { useStatusbarHeight } from '@/store/common/hook'
 import { useSettingValue } from '@/store/setting/hook'
-// import MoreBtn from './MoreBtn2'
 
-const getCutoutLeft = () => {
-  const screen = Dimensions.get('screen')
-  const win = Dimensions.get('window')
-  return Math.max(0, screen.width - win.width)
+const useCutoutLeft = () => {
+  const [cutoutLeftDp, setCutoutLeftDp] = useState(() => {
+    const screen = Dimensions.get('screen')
+    const win = Dimensions.get('window')
+    return Math.max(0, screen.width - win.width)
+  })
+
+  useEffect(() => {
+    void getCutoutLeftPx().then((px: number) => {
+      const { PixelRatio } = require('react-native')
+      setCutoutLeftDp(px > 0 ? Math.round(px / PixelRatio.get()) : 0)
+    })
+  }, [])
+
+  return cutoutLeftDp
 }
 
 export default memo(({ componentId }: { componentId: string }) => {
   const statusBarHeight = useStatusbarHeight()
   const isLandscapeStretch = useSettingValue('theme.isLandscapeStretch')
-  const cutoutLeft = isLandscapeStretch ? 0 : getCutoutLeft()
+  const rawCutoutLeft = useCutoutLeft()
+  const cutoutLeft = isLandscapeStretch ? 0 : rawCutoutLeft
 
   useEffect(() => {
     setComponentId(COMPONENT_IDS.playDetail, componentId)

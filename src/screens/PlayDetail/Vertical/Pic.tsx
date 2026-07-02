@@ -15,7 +15,7 @@ import { getPicUrl } from '@/core/music/online';
 import { getFileExtensionFromUrl } from '@/screens/Home/Views/Mylist/MusicList/download/utils';
 import settingState from '@/store/setting/state';
 
-export default memo(({ componentId }: { componentId: string }) => {
+export default memo(({ componentId, maxCoverHeight }: { componentId: string, maxCoverHeight?: number }) => {
   const musicInfo = usePlayMusicInfo();
   const { width: winWidth, height: winHeight } = useWindowSize();
   const statusBarHeight = useStatusbarHeight();
@@ -99,9 +99,19 @@ export default memo(({ componentId }: { componentId: string }) => {
 
   const imageContainerStyle = useMemo(() => {
     const isSmallWindow = winHeight < 700
-    const baseWidth = isNewUI 
-      ? Math.min(winWidth * (isSmallWindow ? 0.5 : 0.75), (winHeight - statusBarHeight - HEADER_HEIGHT) * (isSmallWindow ? 0.3 : 0.45))
-      : Math.min(winWidth * 0.85, (winHeight - statusBarHeight - HEADER_HEIGHT) * 0.5);
+    const availableHeight = winHeight - statusBarHeight - HEADER_HEIGHT
+    let heightLimit: number
+    if (maxCoverHeight != null) {
+      heightLimit = maxCoverHeight
+    } else if (isNewUI) {
+      heightLimit = availableHeight * (isSmallWindow ? 0.3 : 0.45)
+    } else {
+      heightLimit = availableHeight * 0.5
+    }
+    const widthLimit = isNewUI
+      ? winWidth * (isSmallWindow ? 0.55 : 0.65)
+      : winWidth * 0.85
+    const baseWidth = Math.min(widthLimit, heightLimit)
     const imgWidth = baseWidth * (coverSize / 100);
     const radius = isCoverSpin ? imgWidth / 2 : 4;
     return {
@@ -113,7 +123,7 @@ export default memo(({ componentId }: { componentId: string }) => {
       backgroundColor: 'transparent',
       overflow: 'hidden',
     };
-  }, [statusBarHeight, winHeight, winWidth, isCoverSpin, coverSize, isNewUI]);
+  }, [statusBarHeight, winHeight, winWidth, isCoverSpin, coverSize, isNewUI, maxCoverHeight]);
 
   const imageStyle = useMemo(() => ({
     width: '100%',
@@ -197,13 +207,32 @@ export default memo(({ componentId }: { componentId: string }) => {
     }
   };
 
+  const containerStyle = useMemo(() => {
+    const baseStyle = isNewUI ? styles.containerNew : styles.container
+    if (maxCoverHeight != null) {
+      return { ...baseStyle, maxHeight: maxCoverHeight }
+    }
+    return baseStyle
+  }, [isNewUI, maxCoverHeight])
+
+  const clampedImageStyle = useMemo(() => {
+    if (maxCoverHeight != null) {
+      return {
+        ...imageContainerStyle,
+        maxWidth: maxCoverHeight,
+        maxHeight: maxCoverHeight,
+      }
+    }
+    return imageContainerStyle
+  }, [imageContainerStyle, maxCoverHeight])
+
   return (
-    <View style={[styles.container, isNewUI ? styles.containerNew : {}]}>
+    <View style={containerStyle}>
       <TouchableWithoutFeedback onLongPress={handleLongPress}>
         <View
           ref={coverRef}
           collapsable={false}
-          style={[styles.content, imageContainerStyle, { overflow: 'hidden' }]}
+          style={[styles.content, clampedImageStyle, { overflow: 'hidden' }]}
           renderToHardwareTextureAndroid={shouldForceLayerComposition}
           needsOffscreenAlphaCompositing={shouldForceLayerComposition}
         >

@@ -1,11 +1,12 @@
 import {memo, useState, useRef, useMemo, useEffect, useCallback} from 'react'
 import { View, AppState, Animated, PanResponder } from 'react-native'
 
-import Header from './components/Header'
+import Header, { HEADER_HEIGHT } from './components/Header'
 import Player from './Player'
 import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view'
 import Pic from './Pic'
 import Lyric from './Lyric'
+import SongInfo from './components/SongInfo'
 import MiniLyric from '../components/MiniLyric'
 import { screenkeepAwake, screenUnkeepAwake } from '@/utils/nativeModules/utils'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
@@ -14,7 +15,7 @@ import { useWindowSize } from '@/utils/hooks'
 import { useSettingValue } from '@/store/setting/hook'
 import { playNext, playPrev } from '@/core/player/player'
 import PlayerPlaylist, { type PlayerPlaylistType } from '@/components/player/PlayerPlaylist.tsx'
-import VerticalNew from './VerticalNew'
+import { scaleSizeW } from '@/utils/pixelRatio'
 
 const LyricPage = ({ activeIndex }: { activeIndex: number }) => {
   const initedRef = useRef(false)
@@ -28,7 +29,7 @@ const LyricPage = ({ activeIndex }: { activeIndex: number }) => {
   }
 }
 
-const VerticalOld = memo(({ componentId }: { componentId: string }) => {
+const VerticalNew = memo(({ componentId }: { componentId: string }) => {
   const [pageIndex, setPageIndex] = useState(0)
   const pagerViewRef = useRef<PagerView>(null);
   const showLyricRef = useRef(false)
@@ -36,6 +37,11 @@ const VerticalOld = memo(({ componentId }: { componentId: string }) => {
   const { height: winHeight } = useWindowSize()
   const isEnableSlideSwitchSong = useSettingValue('player.isEnableSlideSwitchSong')
   const miniLyricAlign = useSettingValue('playDetail.style.miniLyricAlign')
+
+  const maxCoverHeight = useMemo(() => {
+    const availableHeight = winHeight - HEADER_HEIGHT
+    return Math.round(availableHeight * 0.38)
+  }, [winHeight])
 
   const slideOffset = useRef(new Animated.Value(0)).current;
   const maxSlide = winHeight * 0.5;
@@ -184,9 +190,11 @@ const VerticalOld = memo(({ componentId }: { componentId: string }) => {
     }
   }, [])
 
+  const containerPaddingH = useMemo(() => scaleSizeW(10), [])
+
   return (
     <>
-      <Header isNewUI={false} pageIndex={pageIndex} />
+      <Header isNewUI={true} pageIndex={pageIndex} />
       <View style={styles.container} {...panResponder.panHandlers}>
         <PagerView
           onPageSelected={onPageSelected}
@@ -194,31 +202,31 @@ const VerticalOld = memo(({ componentId }: { componentId: string }) => {
           ref={pagerViewRef}
         >
           <View collapsable={false} style={styles.pageContainer}>
-            <Animated.View collapsable={false} style={[styles.picPageContainerOld, slideStyle]}>
-              <Pic componentId={componentId} />
-              <MiniLyric
-                onPress={handleSwitchToLyricPage}
-                style={[styles.miniLyricContainer, styles[`miniLyricAlign${miniLyricAlign.charAt(0).toUpperCase() + miniLyricAlign.slice(1)}`]]}
-              />
+            <Animated.View collapsable={false} style={[styles.picPageContainerNew, slideStyle, { paddingTop: containerPaddingH }]}>
+              <View style={styles.picContainer}>
+                <Pic componentId={componentId} maxCoverHeight={maxCoverHeight} />
+              </View>
+              <View style={[styles.infoContainer, { paddingHorizontal: containerPaddingH, marginTop: containerPaddingH }]}>
+                <SongInfo />
+                <MiniLyric
+                  onPress={handleSwitchToLyricPage}
+                  style={[styles.miniLyricContainerNew, styles[`miniLyricAlign${miniLyricAlign.charAt(0).toUpperCase() + miniLyricAlign.slice(1)}`]]}
+                />
+              </View>
             </Animated.View>
+            {pageIndex === 0 && <Player componentId={componentId} isNewUI={true} />}
           </View>
           <View collapsable={false}>
             <LyricPage activeIndex={pageIndex} />
           </View>
         </PagerView>
-        <Player componentId={componentId} isNewUI={false} />
       </View>
       <PlayerPlaylist ref={playlistRef} />
     </>
   )
 })
 
-export default memo(({ componentId }: { componentId: string }) => {
-  const isNewUI = useSettingValue('playDetail.style.newUI')
-  return isNewUI
-    ? <VerticalNew componentId={componentId} />
-    : <VerticalOld componentId={componentId} />
-})
+export default VerticalNew
 
 const styles = createStyle({
   container: {
@@ -230,18 +238,25 @@ const styles = createStyle({
   },
   pageContainer: {
     flex: 1,
+    flexDirection: 'column',
     position: 'relative',
   },
-  picPageContainerOld: {
+  picPageContainerNew: {
     flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'column',
     position: 'relative',
+    overflow: 'hidden',
   },
-  miniLyricContainer: {
-    position: 'absolute',
-    bottom: '6%',
-    left: 0,
-    right: 0,
+  picContainer: {
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  infoContainer: {
+    flex: 0,
+    flexShrink: 0,
+  },
+  miniLyricContainerNew: {
+    paddingHorizontal: 10,
   },
   miniLyricAlignLeft: {
     alignItems: 'flex-start',

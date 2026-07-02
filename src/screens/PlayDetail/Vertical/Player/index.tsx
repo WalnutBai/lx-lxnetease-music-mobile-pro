@@ -4,22 +4,27 @@ import { View } from 'react-native'
 import MoreBtn from './components/MoreBtn'
 import PlayInfo from './components/PlayInfo'
 import ControlBtn from './components/ControlBtn'
-import FeatureBtns from '../FeatureBtns'
 import { createStyle } from '@/utils/tools'
 import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
+import PlayerNew from './PlayerNew'
 
-export default memo(({ componentId, isNewUI }: { componentId: string, isNewUI: boolean }) => {
+const PlayerOld = memo(({ componentId }: { componentId: string }) => {
   return (
-    <View 
-      style={styles.container} 
+    <View
+      style={styles.container}
       nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_player}
     >
-      {isNewUI ? <FeatureBtns componentId={componentId} /> : null}
       <PlayInfo />
-      <ControlBtn isNewUI={isNewUI} />
-      {isNewUI ? null : <MoreBtn componentId={componentId} />}
+      <ControlBtn isNewUI={false} />
+      <MoreBtn componentId={componentId} />
     </View>
   )
+})
+
+export default memo(({ componentId, isNewUI }: { componentId: string, isNewUI: boolean }) => {
+  return isNewUI
+    ? <PlayerNew componentId={componentId} />
+    : <PlayerOld componentId={componentId} />
 })
 
 const styles = createStyle({

@@ -16,8 +16,8 @@ import Btn from './Btn'
 import TimeoutExitBtn from './TimeoutExitBtn'
 import Marquee from './Marquee'
 import StatusBar from '@/components/common/StatusBar'
-import { handleShare } from '@/screens/Home/Views/Mylist/MusicList/listAction'
 import { handleShowArtistDetail } from '@/components/OnlineList/listAction'
+import HeaderNew from './HeaderNew'
 
 export const HEADER_HEIGHT = scaleSizeH(_HEADER_HEIGHT)
 
@@ -105,41 +105,7 @@ const Title = () => {
   )
 }
 
-const AnimatedIndicatorDot = ({ isActive }: { isActive: boolean }) => {
-  const animatedWidth = useRef(new Animated.Value(isActive ? 16 : 6)).current
-  const animatedOpacity = useRef(new Animated.Value(isActive ? 1 : 0.5)).current
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(animatedWidth, {
-        toValue: isActive ? 16 : 6,
-        useNativeDriver: false,
-        tension: 50,
-        friction: 7,
-      }),
-      Animated.spring(animatedOpacity, {
-        toValue: isActive ? 1 : 0.5,
-        useNativeDriver: false,
-        tension: 50,
-        friction: 7,
-      }),
-    ]).start()
-  }, [isActive])
-
-  return (
-    <Animated.View
-      style={{
-        width: animatedWidth,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: '#000',
-        opacity: animatedOpacity,
-      }}
-    />
-  )
-}
-
-export default memo(({ isNewUI, pageIndex }: { isNewUI: boolean; pageIndex?: number }) => {
+const HeaderOld = memo(({ pageIndex }: { pageIndex?: number }) => {
   const popupRef = useRef<SettingPopupType>(null)
   const timerModalRef = useRef<TimeoutExitEditModalType>(null)
   const statusBarHeight = useStatusbarHeight()
@@ -151,18 +117,7 @@ export default memo(({ isNewUI, pageIndex }: { isNewUI: boolean; pageIndex?: num
   const showSetting = () => {
     popupRef.current?.show()
   }
-  const showTimer = () => {
-    timerModalRef.current?.show()
-  }
   const iconColor = theme.isDark ? theme['c-font'] : theme['c-primary']
-  const activeIndex = pageIndex ?? 0
-
-  const handleShare = useCallback(() => {
-    const info = playerState.playMusicInfo.musicInfo
-    if (!info) return
-    const musicInfo = 'progress' in info ? info.metadata.musicInfo : info
-    handleShare(musicInfo)
-  }, [])
 
   return (
     <View
@@ -170,68 +125,26 @@ export default memo(({ isNewUI, pageIndex }: { isNewUI: boolean; pageIndex?: num
       nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_header}
     >
       <StatusBar />
-      {isNewUI ? (
-        <View style={styles.containerNew}>
-          <View style={styles.leftArea}>
-            <Icon name="chevron-left" color={iconColor} size={24} onPress={back} />
-          </View>
-          <View style={styles.centerArea}>
-            <View style={styles.pageIndicator}>
-              <AnimatedIndicatorDot isActive={activeIndex === 0} />
-              <AnimatedIndicatorDot isActive={activeIndex === 1} />
-            </View>
-          </View>
-          <View style={styles.rightArea}>
-            <Icon
-              name="music_time"
-              color={timeInfo.active ? theme['c-primary-font-active'] : iconColor}
-              size={22}
-              onPress={showTimer}
-            />
-            <Icon name="slider" color={iconColor} size={22} onPress={showSetting} />
-          </View>
-        </View>
-      ) : (
-        <View style={styles.containerOld}>
-          <Btn icon="chevron-left" onPress={back} />
-          <Title />
-          <TimeoutExitBtn />
-          <Btn icon="slider" onPress={showSetting} />
-        </View>
-      )}
+      <View style={styles.containerOld}>
+        <Btn icon="chevron-left" onPress={back} />
+        <Title />
+        <TimeoutExitBtn />
+        <Btn icon="slider" onPress={showSetting} />
+      </View>
       <SettingPopup ref={popupRef} direction="vertical" />
       <TimeoutExitEditModal ref={timerModalRef} timeInfo={timeInfo} />
     </View>
   )
 })
 
+export default memo(({ isNewUI, pageIndex }: { isNewUI: boolean; pageIndex?: number }) => {
+  return isNewUI ? <HeaderNew pageIndex={pageIndex} /> : <HeaderOld pageIndex={pageIndex} />
+})
+
 const styles = StyleSheet.create({
   containerOld: {
     flexDirection: 'row',
     height: '100%',
-  },
-  containerNew: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: '100%',
-    paddingHorizontal: 10,
-  },
-  leftArea: {
-    width: scaleSizeW(60),
-    alignItems: 'flex-start',
-  },
-  centerArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rightArea: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-    width: scaleSizeW(60),
-    justifyContent: 'flex-end',
   },
   titleContent: {
     flex: 1,
@@ -245,10 +158,5 @@ const styles = StyleSheet.create({
   },
   singerText: {
     paddingRight: 2,
-  },
-  pageIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
 })
